@@ -22,5 +22,7 @@ namespace QuickCart.API.Models
 
         [ForeignKey("CategoryId")]
         public Category Category { get; set; } = null!;
+
+        public ICollection<ProductImage> Images { get; set; } = new List<ProductImage>();
     }
 }

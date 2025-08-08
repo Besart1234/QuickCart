@@ -1,4 +1,6 @@
-﻿namespace QuickCart.API.Dtos.Product
+﻿using QuickCart.API.Dtos.ProductImage;
+
+namespace QuickCart.API.Dtos.Product
 {
     public class ProductDetailsDto
     {
@@ -9,5 +11,6 @@
         public int Stock { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
+        public List<ProductImageResponseDto> Images { get; set; } = new();
     }
 }
