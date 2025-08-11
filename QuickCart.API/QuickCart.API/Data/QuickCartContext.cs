@@ -1,9 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using QuickCart.API.Models;
 
 namespace QuickCart.API.Data
 {
-    public class QuickCartContext : DbContext
+    public class QuickCartContext : 
+        IdentityDbContext<ApplicationUser, IdentityRole<int>, int>
     {
         public QuickCartContext(DbContextOptions<QuickCartContext> options) : base(options) { }
 
@@ -13,6 +16,9 @@ namespace QuickCart.API.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            // IMPORTANT for Identity tables
+            base.OnModelCreating(modelBuilder);
+
             modelBuilder.Entity<Product>()
                 .Property(p => p.Price)
                 .HasPrecision(18, 2);
