@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using QuickCart.API.Data;
 using QuickCart.API.Models;
+using QuickCart.API.Services;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -52,6 +53,8 @@ builder.Services.AddAuthentication(options =>
             ClockSkew = TimeSpan.FromMinutes(1)
         };
     });
+
+builder.Services.AddScoped<JwtTokenService>();
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
