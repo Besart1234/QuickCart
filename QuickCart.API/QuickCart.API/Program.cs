@@ -52,6 +52,18 @@ builder.Services.AddAuthentication(options =>
             IssuerSigningKey = new SymmetricSecurityKey(key),
             ClockSkew = TimeSpan.FromMinutes(1)
         };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                if (context.Request.Cookies.ContainsKey("jwt"))
+                {
+                    context.Token = context.Request.Cookies["jwt"];
+                }
+                return Task.CompletedTask;
+            }
+        };
     });
 
 builder.Services.AddScoped<JwtTokenService>();
