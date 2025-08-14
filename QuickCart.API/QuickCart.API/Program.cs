@@ -77,6 +77,45 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+async Task SeedRolesAsync(IServiceProvider services)
+{
+    var roleManager = services.GetRequiredService<RoleManager<IdentityRole<int>>>();
+
+    string[] roleNames = { "Admin", "Customer" };
+
+    foreach (var role in roleNames)
+    {
+        var exists = await roleManager.RoleExistsAsync(role);
+        if (!exists)
+        {
+            await roleManager.CreateAsync(new IdentityRole<int>(role));
+        }
+    }
+}
+
+async Task SeedAdminUserAsync(IServiceProvider services)
+{
+    var userManager = services.GetRequiredService<UserManager<ApplicationUser>>();
+
+    var adminEmail = "admin@quickcart.com";
+    var adminUser = await userManager.FindByEmailAsync(adminEmail);
+
+    if(adminUser == null)
+    {
+        adminUser = new ApplicationUser
+        {
+            UserName = "ADMIN",
+            FirstName = "Admin",
+            LastName = "Admin",
+            Email = adminEmail
+        };
+
+        var result = await userManager.CreateAsync(adminUser, "Admin123");
+        if (result.Succeeded)
+            await userManager.AddToRoleAsync(adminUser, "Admin");
+    }
+}
+
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
@@ -92,5 +131,12 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+using(var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    await SeedRolesAsync(services);
+    await SeedAdminUserAsync(services);
+}
 
 app.Run();
