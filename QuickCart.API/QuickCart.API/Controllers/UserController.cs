@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuickCart.API.Data;
 using QuickCart.API.Dtos.User;
+using QuickCart.API.Dtos.UserAddress;
 using QuickCart.API.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -154,6 +155,124 @@ namespace QuickCart.API.Controllers
             var result = await _userManager.DeleteAsync(user);
 
             if (!result.Succeeded) return BadRequest(result.Errors);
+
+            return NoContent();
+        }
+
+        [HttpGet("{userId}/addresses")]
+        public async Task<ActionResult<IEnumerable<UserAddressResponseDto>>> 
+            GetAddressesForUser(int userId)
+        {
+            if(!IsSelfOrAdmin(userId)) return Forbid();
+
+            var addresses = await _context.UserAddress
+                .Where(a => a.UserId == userId)
+                .Select(a => new UserAddressResponseDto
+                {
+                    Street = a.Street,
+                    City = a.City,
+                    State = a.State,
+                    Country = a.Country,
+                    PostalCode = a.PostalCode
+                })
+                .ToListAsync();
+
+            return Ok(addresses);
+        }
+
+        [HttpGet("{userId}/addresses/{addressId}")]
+        public async Task<ActionResult<UserAddressResponseDto>> 
+            GetAddressForUser(int userId, int addressId)
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            var address = await _context.UserAddress
+                .FirstOrDefaultAsync(a => a.UserId == userId 
+                && a.Id == addressId);
+
+            if (address == null) return NotFound();
+
+            return new UserAddressResponseDto
+            {
+                Street = address.Street,
+                City = address.City,
+                State = address.State,
+                Country = address.Country,
+                PostalCode = address.PostalCode
+            };
+        }
+
+        [HttpPost("{userId}/addresses")]
+        public async Task<ActionResult<UserAddressResponseDto>> 
+            AddAddressForUser(int userId, UserAddressCreateUpdateDto newAddress)
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            var address = new UserAddress
+            {
+                Street = newAddress.Street,
+                City = newAddress.City,
+                State = newAddress.State,
+                Country = newAddress.Country,
+                PostalCode = newAddress.PostalCode,
+                UserId = userId
+            };
+
+            _context.UserAddress.Add(address);
+            await _context.SaveChangesAsync();
+
+            var dto = new UserAddressResponseDto
+            {
+                Id = address.Id,
+                Street = address.Street,
+                City = address.City,
+                State = address.State,
+                Country = address.Country,
+                PostalCode = address.PostalCode
+            };
+
+            return CreatedAtAction(nameof(GetAddressForUser),
+                new { userId = address.UserId, addressId = address.Id },
+                dto);
+        }
+
+        [HttpPut("{userId}/addresses/{addressId}")]
+        public async Task<IActionResult> 
+            UpdateAddressForUser(int userId, int addressId, 
+            UserAddressCreateUpdateDto updatedAddress)
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            var address = await _context.UserAddress
+                .FirstOrDefaultAsync(a => a.Id == addressId 
+                && a.UserId == userId);
+            if (address == null) return NotFound();
+
+            address.Street = updatedAddress.Street;
+            address.City = updatedAddress.City;
+            address.State = updatedAddress.State;
+            address.Country = updatedAddress.Country;
+            address.PostalCode = updatedAddress.PostalCode;
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpDelete("{userId}/addresses/{addressId}")]
+        public async Task<IActionResult> 
+            DeleteAddressForUser(int userId, int addressId)
+        {
+            if(!IsSelfOrAdmin(userId)) return Forbid();
+
+            var address = await _context.UserAddress
+                .FirstOrDefaultAsync(a => a.Id == addressId 
+                && a.UserId == userId);    
+
+            if(address == null) return NotFound();
+
+            _context.UserAddress.Remove(address);
+            await _context.SaveChangesAsync();
 
             return NoContent();
         }
