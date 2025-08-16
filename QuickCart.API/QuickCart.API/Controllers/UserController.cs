@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuickCart.API.Data;
+using QuickCart.API.Dtos.Order;
+using QuickCart.API.Dtos.OrderItem;
 using QuickCart.API.Dtos.User;
 using QuickCart.API.Dtos.UserAddress;
 using QuickCart.API.Models;
@@ -277,6 +279,67 @@ namespace QuickCart.API.Controllers
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        [HttpGet("{userId}/orders")]
+        public async Task<ActionResult<IEnumerable<OrderResponseDto>>> 
+            GetOrdersForuser(int userId)
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            var orders = await _context.Order
+                .Where(o => o.UserId == userId)
+                .Select(o => new OrderResponseDto
+                {
+                    Id = o.Id,
+                    UserId = o.UserId,
+                    CreatedAt = o.CreatedAt,
+                    TotalPrice = o.TotalPrice,
+                    Status = o.Status
+                })
+                .ToListAsync();
+
+            return Ok(orders);
+        }
+
+        [HttpGet("{userId}/orders/{orderId}")]
+        public async Task<ActionResult<OrderDetailsResponseDto>> 
+            GetOrderForUser(int userId, int orderId) 
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            var order = await _context.Order
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.Id == orderId
+                && o.UserId == userId);
+
+            if(order == null) return NotFound();
+
+            var result = new OrderDetailsResponseDto
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                CreatedAt = order.CreatedAt,
+                TotalPrice = order.TotalPrice,
+                Status = order.Status,
+                ShippingStreet = order.ShippingStreet,
+                ShippingCity = order.ShippingCity,
+                ShippingState = order.ShippingState,
+                ShippingCountry = order.ShippingCountry,
+                ShippingPostalCode = order.ShippingPostalCode,
+                OrderItems = order.OrderItems.Select(oi => new OrderItemResponseDto
+                {
+                    Id = oi.Id,
+                    ProductId = oi.ProductId,
+                    ProductName = oi.Product.Name,
+                    PriceAtPurchase = oi.PriceAtPurchase,
+                    Quantity = oi.Quantity
+                })
+                .ToList()
+            };
+
+            return Ok(result);
         }
 
         private bool IsSelfOrAdmin(int targetUserId)
