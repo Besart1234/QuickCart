@@ -169,6 +169,7 @@ namespace QuickCart.API.Controllers
                 .Where(a => a.UserId == userId)
                 .Select(a => new UserAddressResponseDto
                 {
+                    Id = a.Id,
                     Street = a.Street,
                     City = a.City,
                     State = a.State,
@@ -194,6 +195,7 @@ namespace QuickCart.API.Controllers
 
             return new UserAddressResponseDto
             {
+                Id = address.Id,
                 Street = address.Street,
                 City = address.City,
                 State = address.State,
