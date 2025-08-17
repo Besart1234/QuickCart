@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore.Storage.ValueConversion.Internal;
 using QuickCart.API.Dtos.Auth;
 using QuickCart.API.Models;
 using QuickCart.API.Services;
@@ -16,11 +17,16 @@ namespace QuickCart.API.Controllers
     {
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JwtTokenService _jwtTokenService;
+        private readonly IConfiguration _configuration;
         
-        public AuthController(UserManager<ApplicationUser> userManager, JwtTokenService jwtTokenService)
+        public AuthController(
+            UserManager<ApplicationUser> userManager, 
+            JwtTokenService jwtTokenService,
+            IConfiguration configuration)
         {
             _userManager = userManager;
             _jwtTokenService = jwtTokenService;
+            _configuration = configuration;
         }
 
         [HttpPost("register")]
@@ -45,15 +51,19 @@ namespace QuickCart.API.Controllers
                 await _userManager.AddToRoleAsync(user, "Customer");
             }
 
-            var token = _jwtTokenService.CreateToken(user);
+            //Access token
+            var accessToken = await _jwtTokenService.CreateAccessTokenAsync(user);
 
-            Response.Cookies.Append("jwt", token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddHours(1)
-            });
+            //Refresh token (persisted)
+            var refresh = await _jwtTokenService.IssueRefreshTokenAsync(user);
+
+            var accessMinutes = _configuration
+                .GetValue<int?>("Jwt:DurationInMinutes") ?? 60;
+
+            //Cookies
+            SetAccessCookie(accessToken,
+                DateTime.UtcNow.AddMinutes(accessMinutes));
+            SetRefreshCookie(refresh.Token, refresh.Expires);
 
             return Ok();
         }
@@ -72,30 +82,76 @@ namespace QuickCart.API.Controllers
             if(!isPasswordValid)
                 return Unauthorized("Invalid email or password");
 
-            var token = _jwtTokenService.CreateToken(user);
+            //Access + refresh
+            var accessToken = await _jwtTokenService.CreateAccessTokenAsync(user);
+            var refresh = await _jwtTokenService.IssueRefreshTokenAsync(user);
 
-            Response.Cookies.Append("jwt", token, new CookieOptions
-            {
-                HttpOnly = true,
-                Secure = true,
-                SameSite = SameSiteMode.Lax,
-                Expires = DateTime.UtcNow.AddHours(1)
-            });
+            var accessMinutes = _configuration
+                .GetValue<int?>("Jwt:DurationInMinutes") ?? 60;
+
+            SetAccessCookie(accessToken,
+                DateTime.UtcNow.AddMinutes(accessMinutes));
+            SetRefreshCookie(refresh.Token, refresh.Expires);
 
             return Ok();
         }
 
-        [HttpPost("logout")]
-        //[Authorize(AuthenticationSchemes =JwtBearerDefaults.AuthenticationScheme)]
-        public IActionResult Logout()
+        [HttpPost("refresh")]
+        [AllowAnonymous]
+        public async Task<IActionResult> Refresh()
         {
+            var refreshTokenValue = Request.Cookies["refreshToken"];
+            if (string.IsNullOrWhiteSpace(refreshTokenValue))
+                return Unauthorized("Missing refresh token");
+
+            //Validate the stored refresh token
+            var stored = await _jwtTokenService
+                .GetActiveRefreshTokenAsync(refreshTokenValue);
+            if (stored == null)
+                return Unauthorized("Invalid or expired refresh token");
+
+            //Load user (should exist if token is valid)
+            var user = await _userManager
+                .FindByIdAsync(stored.UserId.ToString());
+            if (user == null)
+                return Unauthorized("User not found");
+
+            //ROTATE: Issue a fresh token, revoke the old one
+            await _jwtTokenService
+                .RevokeRefreshTokenByValueAsync(refreshTokenValue);
+            var newRefresh = await _jwtTokenService.IssueRefreshTokenAsync(user);
+
+            //Issue a new access token too
+            var newAccess = await _jwtTokenService.CreateAccessTokenAsync(user);
+
+            var accessMinutes = _configuration
+                .GetValue<int?>("Jwt:DurationInMinutes") ?? 60;
+
+            SetAccessCookie(newAccess,
+                DateTime.UtcNow.AddMinutes(accessMinutes));
+            SetRefreshCookie(newRefresh.Token, newRefresh.Expires);
+
+            return Ok(new { message = "Token refreshed" });
+        }
+
+        [HttpPost("logout")]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
+        public async Task<IActionResult> Logout()
+        {
+            var rt = Request.Cookies["refreshToken"];
+            if (!string.IsNullOrWhiteSpace(rt))
+            {
+                await _jwtTokenService.RevokeRefreshTokenByValueAsync(rt);
+            }
+
             Response.Cookies.Delete("jwt");
+            Response.Cookies.Delete("refreshToken");
 
             return Ok(new { message = "Logged out successfully" });
         }
 
         [HttpGet("me")]
-        //[Authorize(AuthenticationSchemes =JwtBearerDefaults.AuthenticationScheme)]
+        [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme)]
         public async Task<IActionResult> GetCurrentUser()
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ??
@@ -114,6 +170,28 @@ namespace QuickCart.API.Controllers
                 user.LastName,
                 user.Email,
                 Roles = roles
+            });
+        }
+
+        private void SetAccessCookie(string token, DateTime expiresUtc)
+        {
+            Response.Cookies.Append("jwt", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Lax,
+                Expires = expiresUtc
+            });
+        }
+
+        private void SetRefreshCookie(string token,  DateTime expiresUtc)
+        {
+            Response.Cookies.Append("refreshToken", token, new CookieOptions
+            {
+                HttpOnly = true,
+                Secure = true,
+                SameSite = SameSiteMode.Strict,
+                Expires = expiresUtc
             });
         }
     }

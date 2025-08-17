@@ -44,7 +44,11 @@ namespace QuickCart.API.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<OrderDetailsResponseDto>> GetOrder(int id)
         {
-            var order = await _context.Order.FindAsync(id);
+            var order = await _context.Order
+                .Include(o => o.OrderItems)
+                .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync(o => o.Id == id);
+
             if (order == null) return NotFound();
 
             var result = new OrderDetailsResponseDto
@@ -196,7 +200,10 @@ namespace QuickCart.API.Controllers
             if (!User.IsInRole("Admin") && currentUserId != order.UserId)
                 return Forbid();
 
-            var orderItems = order.OrderItems.Select(oi => new OrderItemResponseDto
+            var orderItems = await _context.OrderItem
+                .Where(oi => oi.OrderId  == orderId)
+                .Include(oi => oi.Product)
+                .Select(oi => new OrderItemResponseDto
             {
                 Id = oi.Id,
                 ProductId = oi.ProductId,
@@ -204,7 +211,7 @@ namespace QuickCart.API.Controllers
                 PriceAtPurchase = oi.PriceAtPurchase,
                 Quantity = oi.Quantity
             })
-             .ToList();
+             .ToListAsync();
 
             return Ok(orderItems);
         }

@@ -17,6 +17,8 @@ namespace QuickCart.API.Data
         public DbSet<Order> Order { get; set; }
         public DbSet<OrderItem> OrderItem { get; set; }
 
+        public DbSet<RefreshToken> RefreshToken { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // IMPORTANT for Identity tables
