@@ -6,8 +6,10 @@ using Microsoft.EntityFrameworkCore;
 using QuickCart.API.Data;
 using QuickCart.API.Dtos.Order;
 using QuickCart.API.Dtos.OrderItem;
+using QuickCart.API.Dtos.ProductImage;
 using QuickCart.API.Dtos.User;
 using QuickCart.API.Dtos.UserAddress;
+using QuickCart.API.Dtos.Wishlist;
 using QuickCart.API.Models;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -340,6 +342,102 @@ namespace QuickCart.API.Controllers
             };
 
             return Ok(result);
+        }
+
+        [HttpGet("{userId}/wishlist")]
+        public async Task<ActionResult<IEnumerable<WishlistProductDto>>> 
+            GetWishlistForUser(int userId)
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            var wishlistItems = await _context.Wishlist
+                .Where(w => w.UserId == userId)
+                .Include(w => w.Product)
+                .ThenInclude(p => p.Images)
+                .Select(w => new WishlistProductDto
+                {
+                    ProductId = w.ProductId,
+                    ProductName = w.Product.Name,
+                    Price = w.Product.Price,
+                    Images = w.Product.Images
+                    .OrderBy(img => img.Id)
+                    .Select(img => new ProductImageResponseDto
+                    {
+                        Id = img.Id,
+                        Url = img.Url,
+                        AltText = img.AltText
+                    })
+                    .ToList()
+                }).ToListAsync();
+
+            return Ok(wishlistItems);
+        }
+
+        [HttpPost("{userId}/wishlist")]
+        public async Task<ActionResult<WishlistProductDto>>
+            AddToWishlist(int userId, WishlistCreateDto request)
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            var exists = await _context.Wishlist
+                .AnyAsync(w => w.UserId == userId 
+                && w.ProductId == request.ProductId);
+
+            if (exists)
+                return BadRequest("This product is already in the wishlist");
+
+            var product = await _context.Product
+                .Include(p => p.Images)
+                .FirstOrDefaultAsync(p => p.Id == request.ProductId);
+
+            if (product == null)
+                return BadRequest("Product not found");
+
+            var wishlistItem = new Wishlist
+            {
+                UserId = userId,
+                ProductId = request.ProductId,
+            };
+
+            _context.Wishlist.Add(wishlistItem);
+            await _context.SaveChangesAsync();
+
+            var result = new WishlistProductDto
+            {
+                ProductId = product.Id,
+                ProductName = product.Name,
+                Price = product.Price,
+                Images = product.Images
+                .OrderBy(img => img.Id)
+                .Select(img => new ProductImageResponseDto
+                {
+                    Id = img.Id,
+                    Url = img.Url,
+                    AltText = img.AltText,
+                })
+                .ToList()
+            };
+
+            return CreatedAtAction(nameof(GetWishlistForUser),
+                new { userId }, result);
+        }
+
+        [HttpDelete("{userId}/wishlist/{productId}")]
+        public async Task<IActionResult> 
+            RemoveFromWishlist(int userId, int productId)
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            var wishlistItem = _context.Wishlist
+                .FirstOrDefault(w => w.UserId == userId 
+                && w.ProductId == productId);
+
+            if(wishlistItem == null) return NotFound();
+
+            _context.Wishlist.Remove(wishlistItem);
+            await _context.SaveChangesAsync();
+
+            return NoContent();
         }
 
         private bool IsSelfOrAdmin(int targetUserId)
