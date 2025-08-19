@@ -147,6 +147,8 @@ namespace QuickCart.API.Controllers
             Response.Cookies.Delete("jwt");
             Response.Cookies.Delete("refreshToken");
 
+            HttpContext.Session.Clear();
+
             return Ok(new { message = "Logged out successfully" });
         }
 

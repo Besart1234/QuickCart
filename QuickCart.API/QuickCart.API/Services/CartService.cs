@@ -36,6 +36,7 @@ namespace QuickCart.API.Services
                     ProductId = item.ProductId,
                     ProductName = productName,
                     CurrentPrice = price,
+                    Quantity = 1
                 });
             }
 

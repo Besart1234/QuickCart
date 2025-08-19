@@ -16,6 +16,7 @@ namespace QuickCart.API.Data
         public DbSet<UserAddress> UserAddress { get; set; }
         public DbSet<Order> Order { get; set; }
         public DbSet<OrderItem> OrderItem { get; set; }
+        public DbSet<Wishlist> Wishlist { get; set; }
 
         public DbSet<RefreshToken> RefreshToken { get; set; }
 
@@ -35,6 +36,13 @@ namespace QuickCart.API.Data
             modelBuilder.Entity<OrderItem>()
                 .Property(oi => oi.PriceAtPurchase)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Wishlist>()
+                .HasKey(w => new { w.UserId, w.ProductId });
+
+            modelBuilder.Entity<Wishlist>()
+                .HasIndex(w => new { w.UserId, w.ProductId })
+                .IsUnique();
 
             // Product -> ProductImage (Cascade Delete)
             modelBuilder.Entity<Product>()
