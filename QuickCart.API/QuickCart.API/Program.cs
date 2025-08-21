@@ -1,10 +1,13 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MongoDB.Driver;
 using QuickCart.API.Data;
 using QuickCart.API.Models;
 using QuickCart.API.Services;
+using QuickCart.API.Settings;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -80,6 +83,25 @@ builder.Services.AddSession(options =>
 });
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
 builder.Services.AddScoped<CartService>();
+
+
+//Register Mongo in DI container
+builder.Services.Configure<MongoDbSettings>(
+    builder.Configuration.GetSection("MongoDbSettings"));
+
+builder.Services.AddSingleton<IMongoClient>(s =>
+{
+    var settings = builder.Configuration
+        .GetSection("MongoDbSettings").Get<MongoDbSettings>();
+    return new MongoClient(settings!.ConnectionString);
+});
+
+builder.Services.AddScoped(s =>
+{
+    var mongoClient = s.GetRequiredService<IMongoClient>();
+    var settings = s.GetRequiredService<IOptions<MongoDbSettings>>().Value;
+    return mongoClient.GetDatabase(settings.DatabaseName);
+});
 
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
