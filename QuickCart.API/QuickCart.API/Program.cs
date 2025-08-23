@@ -103,6 +103,13 @@ builder.Services.AddScoped(s =>
     return mongoClient.GetDatabase(settings.DatabaseName);
 });
 
+builder.Services.AddScoped<CommentService>(s =>
+{
+    var database = s.GetRequiredService<IMongoDatabase>();
+    return new 
+        CommentService(database.GetCollection<Comment>("Comments"));
+});
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
