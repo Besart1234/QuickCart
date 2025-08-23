@@ -1,9 +1,12 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuickCart.API.Data;
+using QuickCart.API.Dtos.Comment;
 using QuickCart.API.Dtos.Product;
 using QuickCart.API.Dtos.ProductImage;
 using QuickCart.API.Models;
+using QuickCart.API.Services;
+using System.Security.Claims;
 
 namespace QuickCart.API.Controllers
 {
@@ -12,10 +15,12 @@ namespace QuickCart.API.Controllers
     public class ProductController : ControllerBase
     {
         private readonly QuickCartContext _context;
+        private readonly CommentService _commentService;
 
-        public ProductController(QuickCartContext context)
+        public ProductController(QuickCartContext context, CommentService commentService)
         {
             _context = context;
+            _commentService = commentService;
         }
 
         [HttpGet]
@@ -46,7 +51,7 @@ namespace QuickCart.API.Controllers
                 .Include(p => p.Category)
                 .Include(p => p.Images)
                 .FirstOrDefaultAsync(p => p.Id == id);
-            
+
             if (product == null) return NotFound();
 
             return new ProductDetailsDto
@@ -71,7 +76,7 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult<ProductDetailsDto>> 
+        public async Task<ActionResult<ProductDetailsDto>>
             CreateProduct(ProductCreateUpdate newProduct)
         {
             var product = new Product
@@ -106,7 +111,7 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> 
+        public async Task<IActionResult>
             UpdateProduct(int id, ProductCreateUpdate updatedProduct)
         {
             var product = await _context.Product.FindAsync(id);
@@ -136,7 +141,7 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpGet("{productId}/images")]
-        public async Task<ActionResult<IEnumerable<ProductImageResponseDto>>> 
+        public async Task<ActionResult<IEnumerable<ProductImageResponseDto>>>
             GetImagesForProduct(int productId)
         {
             var images = await _context.ProductImage
@@ -153,7 +158,7 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpGet("{productId}/images/{imageId}")]
-        public async Task<ActionResult<ProductImageResponseDto>> 
+        public async Task<ActionResult<ProductImageResponseDto>>
             GetImageForProduct(int imageId, int productId)
         {
             var image = await _context.ProductImage
@@ -172,16 +177,16 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpPost("{productId}/upload-image")]
-        public async Task<ActionResult<ProductImageResponseDto>> 
+        public async Task<ActionResult<ProductImageResponseDto>>
             UploadImage(int productId, [FromForm] IFormFile file, [FromForm] string altText)
         {
-            if (file == null || file.Length == 0) 
+            if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");
 
             // Ensure the folder exists
             var uploadsFolder = Path
                 .Combine(Directory.GetCurrentDirectory(), "wwwroot", "images", "products");
-            
+
             if (!Directory.Exists(uploadsFolder))
                 Directory.CreateDirectory(uploadsFolder);
 
@@ -214,14 +219,14 @@ namespace QuickCart.API.Controllers
             };
 
             return CreatedAtAction(nameof(GetImageForProduct),
-                new {productId, imageId = image.Id,  }, result);
+                new { productId, imageId = image.Id, }, result);
         }
 
         [HttpPatch("{productId}/images/{imageId}")]
         public async Task<IActionResult> UpdateImageAlt(int imageId, int productId, UpdateAltTextDto dto)
         {
             var image = await _context.ProductImage
-                .FirstOrDefaultAsync(i => i.Id == imageId 
+                .FirstOrDefaultAsync(i => i.Id == imageId
                 && i.ProductId == productId);
             if (image == null) return NotFound();
 
@@ -235,7 +240,7 @@ namespace QuickCart.API.Controllers
         public async Task<IActionResult> DeleteImageForProduct(int imageId, int productId)
         {
             var image = await _context.ProductImage
-                .FirstOrDefaultAsync(i => i.Id == imageId 
+                .FirstOrDefaultAsync(i => i.Id == imageId
                 && i.ProductId == productId);
             if (image == null) return NotFound();
 
@@ -244,13 +249,109 @@ namespace QuickCart.API.Controllers
                 .Combine(Directory.GetCurrentDirectory(),
                  "wwwroot", image.Url.TrimStart('/'));
 
-            if(System.IO.File.Exists(filePath))
+            if (System.IO.File.Exists(filePath))
                 System.IO.File.Delete(filePath);
 
             _context.ProductImage.Remove(image);
             await _context.SaveChangesAsync();
 
             return NoContent();
+        }
+
+        //Comments endpoints
+        [HttpGet("{productId}/comments")]
+        public async Task<ActionResult<IEnumerable<CommentResponseDto>>>
+            GetCommentsForProduct(int productId)
+        {
+            var comments = await _commentService.GetByProductAsync(productId);
+            
+            var response = comments.Select(c => new CommentResponseDto
+            {
+                Id = c.Id,
+                ProductId = productId,
+                UserId = c.UserId,
+                Text = c.Text,
+                Rating = c.Rating,
+                CreatedAt = c.CreatedAt,
+            }).ToList();
+
+            return Ok(response);
+        }
+
+        [HttpPost("{productId}/comments")]
+        public async Task<ActionResult<CommentResponseDto>> 
+            AddComment(int productId, CommentCreateUpdateDto newComment)
+        {
+            var userId = int
+                .Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var comment = new Comment
+            {
+                ProductId = productId,
+                UserId = userId,
+                Text = newComment.Text,
+                Rating = newComment.Rating,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            await _commentService.AddAsync(comment);
+
+            var response = new CommentResponseDto
+            {
+                Id = comment.Id,
+                ProductId = productId,
+                UserId = userId,
+                Text = comment.Text,
+                Rating = comment.Rating,
+                CreatedAt = comment.CreatedAt
+            };
+
+            return Ok(response);
+        }
+
+        [HttpPut("{productId}/comments/{commentId}")]
+        public async Task<IActionResult> 
+            UpdateComment(
+                int productId, 
+                string commentId, 
+                CommentCreateUpdateDto updatedComment)
+        {
+            var exisiting = await _commentService.GetAsync(commentId);
+            if (exisiting == null) return NotFound();
+
+            if (!IsSelfOrAdmin(exisiting.UserId))
+                return Forbid();
+
+            exisiting.Text = updatedComment.Text;
+            exisiting.Rating = updatedComment.Rating;
+
+            await _commentService
+                .UpdateAsync(commentId, exisiting);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{productId}/comments/{commentId}")]
+        public async Task<IActionResult> 
+            DeleteComment(int productId, string commentId)
+        {
+            var existing = await _commentService.GetAsync(commentId);
+            if (existing == null) return NotFound();
+
+            if (!IsSelfOrAdmin(existing.UserId))
+                return Forbid();
+
+            await _commentService.DeleteAsync(commentId);
+
+            return NoContent();
+        }
+
+        private bool IsSelfOrAdmin(int targetUserId)
+        {
+            var currentUserId = int
+                .Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            return User.IsInRole("Admin") || currentUserId == targetUserId;
         }
     }
 }

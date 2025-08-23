@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuickCart.API.Data;
+using QuickCart.API.Dtos.Comment;
 using QuickCart.API.Dtos.Order;
 using QuickCart.API.Dtos.OrderItem;
 using QuickCart.API.Dtos.ProductImage;
@@ -11,6 +12,7 @@ using QuickCart.API.Dtos.User;
 using QuickCart.API.Dtos.UserAddress;
 using QuickCart.API.Dtos.Wishlist;
 using QuickCart.API.Models;
+using QuickCart.API.Services;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 
@@ -23,11 +25,16 @@ namespace QuickCart.API.Controllers
     {
         private readonly QuickCartContext _context;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly CommentService _commentService;
 
-        public UserController(QuickCartContext context, UserManager<ApplicationUser> userManager)
+        public UserController(
+            QuickCartContext context, 
+            UserManager<ApplicationUser> userManager,
+            CommentService commentService)
         {
             _context = context;
             _userManager = userManager;
+            _commentService = commentService;
         }
 
         [HttpGet]
@@ -436,6 +443,77 @@ namespace QuickCart.API.Controllers
 
             _context.Wishlist.Remove(wishlistItem);
             await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpGet("{userId}/comments")]
+        public async Task<ActionResult<IEnumerable<UserCommentDto>>> 
+            GetCommentsForUser(int userId)
+        {
+            if (!IsSelfOrAdmin(userId)) return Forbid();
+
+            //1. Get comments from Mongo
+            var comments = await _commentService.GetByUserAsync(userId);
+
+            //2. Extract unique product IDs
+            var productIds = comments
+                .Select(c => c.ProductId).Distinct().ToList();
+
+            //3. Get product names from SQL
+            var products = await _context.Product
+                .Where(p => productIds.Contains(p.Id))
+                .Select(p => new { p.Id, p.Name})
+                .ToDictionaryAsync(p => p.Id, p => p.Name);
+
+            //4. Map to DTOs
+            var response = comments.Select(c => new UserCommentDto
+            {
+                Id = c.Id,
+                Text = c.Text,
+                Rating = c.Rating,
+                CreatedAt = c.CreatedAt,
+                ProductId = c.ProductId,
+                ProductName = products.ContainsKey(c.ProductId)
+                    ? products[c.ProductId] : "Unknown product"
+            }).ToList();
+
+            return Ok(response);
+        }
+
+        [HttpPut("{userId}/comments/{commentId}")]
+        public async Task<IActionResult> 
+            UpdateComment(
+                int userId, 
+                string commentId, 
+                CommentCreateUpdateDto updatedComment)
+        {
+            var exisiting = await _commentService.GetAsync(commentId);
+            if (exisiting == null) return NotFound();
+
+            if (!IsSelfOrAdmin(exisiting.UserId))
+                return Forbid();
+
+            exisiting.Text = updatedComment.Text;
+            exisiting.Rating = updatedComment.Rating;
+
+            await _commentService
+                .UpdateAsync(commentId, exisiting);
+
+            return NoContent();
+        }
+
+        [HttpDelete("{userId}/comments/{commentId}")]
+        public async Task<IActionResult> 
+            DeleteComment(int userId, string commentId)
+        {
+            var existing = await _commentService.GetAsync(commentId);
+            if (existing == null) return NotFound();
+
+            if (!IsSelfOrAdmin(existing.UserId))
+                return Forbid();
+
+            await _commentService.DeleteAsync(commentId);
 
             return NoContent();
         }
