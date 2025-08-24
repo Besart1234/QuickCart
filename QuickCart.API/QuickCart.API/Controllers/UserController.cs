@@ -488,17 +488,20 @@ namespace QuickCart.API.Controllers
                 string commentId, 
                 CommentCreateUpdateDto updatedComment)
         {
-            var exisiting = await _commentService.GetAsync(commentId);
-            if (exisiting == null) return NotFound();
+            var existing = await _commentService.GetAsync(commentId);
+            if (existing == null) return NotFound();
 
-            if (!IsSelfOrAdmin(exisiting.UserId))
+            if (existing.UserId != userId)
+                return BadRequest("User ID in route does not match the comment's owner.");
+
+            if (!IsSelfOrAdmin(existing.UserId))
                 return Forbid();
 
-            exisiting.Text = updatedComment.Text;
-            exisiting.Rating = updatedComment.Rating;
+            existing.Text = updatedComment.Text;
+            existing.Rating = updatedComment.Rating;
 
             await _commentService
-                .UpdateAsync(commentId, exisiting);
+                .UpdateAsync(commentId, existing);
 
             return NoContent();
         }
@@ -509,6 +512,9 @@ namespace QuickCart.API.Controllers
         {
             var existing = await _commentService.GetAsync(commentId);
             if (existing == null) return NotFound();
+
+            if (existing.UserId != userId)
+                return BadRequest("User ID in route does not match the comment's owner.");
 
             if (!IsSelfOrAdmin(existing.UserId))
                 return Forbid();

@@ -110,6 +110,19 @@ builder.Services.AddScoped<CommentService>(s =>
         CommentService(database.GetCollection<Comment>("Comments"));
 });
 
+//Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontEnd", 
+            policy =>
+            {
+                policy.WithOrigins("https://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+            });
+});
+
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -164,6 +177,8 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
+
+app.UseCors("AllowFrontEnd");
 
 app.UseStaticFiles();
 
