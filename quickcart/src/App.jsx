@@ -1,8 +1,9 @@
+import Header from "./components/Header/Header"
 
 function App() {
   return (
     <>
-      Welcome to QuickCart!
+      <Header />
     </>
   )
 }
