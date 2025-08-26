@@ -7,6 +7,7 @@ import Wishlist from "./pages/wishlist/Wishlist"
 import Login from "./pages/auth/Login"
 import Signup from "./pages/auth/Signup"
 import Dashboard from "./pages/dashboard/Dashboard"
+import ProductDetails from "./pages/product/ProductDetails"
 
 function App() {
 	return (
@@ -20,6 +21,8 @@ function App() {
 				<Route path="cart" element={<Cart />} />
 				<Route path="wishlist" element={<Wishlist />} />
 				<Route path="dashboard" element={<Dashboard />} />
+
+				<Route path="products/:id" element={<ProductDetails />}/>
 			</Route>
     	</Routes>
   	)

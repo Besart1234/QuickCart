@@ -38,3 +38,5 @@ appsettings.*.json
 *.user
 *.vs/
 *.csproj.user
+
+wwwroot/images/
