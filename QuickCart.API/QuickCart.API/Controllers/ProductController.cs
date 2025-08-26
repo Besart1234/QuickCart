@@ -36,6 +36,7 @@ namespace QuickCart.API.Controllers
                 Id = p.Id,
                 Name = p.Name,
                 Price = p.Price,
+                Stock = p.Stock,
                 CategoryName = p.Category.Name,
                 MainImageUrl = p.Images
                     .OrderBy(i => i.Id)
