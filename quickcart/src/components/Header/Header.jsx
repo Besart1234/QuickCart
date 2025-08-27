@@ -5,7 +5,7 @@ import { AuthContext } from "../../contexts/AuthContext";
 import './Header.css'
 
 function Header(){
-    const { user, login, logout } = useContext(AuthContext);
+    const { user, logout, loading } = useContext(AuthContext);
 
     return (
         <Navbar bg="light" expand="lg" className="shadow-sm">
@@ -19,30 +19,32 @@ function Header(){
             <Navbar.Toggle aria-controls="basic-navbar-nav" />
             <Navbar.Collapse id="basic-navbar-nav" className="justify-content-end" >
                 <Nav>
-                    {!user ? (
+                    {!loading && (
+                        !user ? (
                         <>
                             <Nav.Link as={Link} to="/login">Login</Nav.Link>
                             <Nav.Link as={Link} to="/signup">Sign Up</Nav.Link>
                         </>
-                    ) : (
-                        <NavDropdown 
-                            title={
-                                <span className="user-dropdown">
-                                    {user.username}
-                                </span>
-                            }
-                            id="user-menu" 
-                            align="end"
-                            className="custom-dropdown"
-                        >
-                            <NavDropdown.Item as={Link} to="/cart">Cart</NavDropdown.Item>
-                            <NavDropdown.Item as={Link} to="/wishlist">Wishlist</NavDropdown.Item>
-                            {user.role === 'Admin' && (
-                                <NavDropdown.Item as={Link} to="/dashboard">Dashboard</NavDropdown.Item>
-                            )}
-                            <NavDropdown.Divider />
-                            <NavDropdown.Item onClick={logout}>Logout</NavDropdown.Item>
-                        </NavDropdown>
+                        ) : (
+                            <NavDropdown 
+                                title={
+                                    <span className="user-dropdown">
+                                        {user.userName}
+                                    </span>
+                                }
+                                id="user-menu" 
+                                align="end"
+                                className="custom-dropdown"
+                            >
+                                <NavDropdown.Item as={Link} to="/cart">Cart</NavDropdown.Item>
+                                <NavDropdown.Item as={Link} to="/wishlist">Wishlist</NavDropdown.Item>
+                                {user.roles.includes('Admin') && (
+                                    <NavDropdown.Item as={Link} to="/dashboard">Dashboard</NavDropdown.Item>
+                                )}
+                                <NavDropdown.Divider />
+                                <NavDropdown.Item onClick={logout}>Logout</NavDropdown.Item>
+                            </NavDropdown>
+                        )
                     )}
                 </Nav>
             </Navbar.Collapse>

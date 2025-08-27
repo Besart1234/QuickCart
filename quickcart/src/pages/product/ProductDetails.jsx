@@ -97,7 +97,7 @@ function ProductDetails() {
                             {product.images.map((_, index) => (
                                 <span key={index} className={`dot ${currentIndex === index ? 'active' : ''}`}></span>
                             ))}
-                            <Button size="sm" variant="link" onClick={handleNext} className="text-dark p-0 me-2 border-0 shadow-none">
+                            <Button size="sm" variant="link" onClick={handleNext} className="text-dark p-0 ms-2 border-0 shadow-none">
                                 <FaChevronRight size={20} />
                             </Button>
                         </div>
