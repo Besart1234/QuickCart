@@ -4,7 +4,7 @@ import { createContext, useState } from "react";
 export const AuthContext = createContext(null);
 
 function AuthProvider({ children }) {
-    const [user, setUser] = useState({ username: 'Besart', role: 'Admin' });
+    const [user, setUser] = useState({ id: 1, username: 'Besart', role: 'Admin' });
 
     const login = function(username, role = "Customer") {
         setUser({ username, role });
