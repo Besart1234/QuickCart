@@ -68,14 +68,14 @@ function Comments({ comments, onAdd, onUpdate, onDelete }) {
                             <CommentFormMode 
                                 initialText={c.text}
                                 initialRating={c.rating}
-                                onCacel={() => setEditingId(null)}
+                                onCancel={() => setEditingId(null)}
                                 onSubmit={handleFormSubmit}
                             />
                         ) : (
                             //Display mode
                             <CommnetDisplayMode 
                                 comment={c}
-                                userId={user?.id}
+                                user={user}
                                 onEdit={startEdit}
                                 onDelete={onDelete}
                             />
@@ -105,7 +105,11 @@ function Comments({ comments, onAdd, onUpdate, onDelete }) {
 
 export default Comments;
 
-function CommnetDisplayMode({ comment, userId, onEdit, onDelete }) {
+function CommnetDisplayMode({ comment, user, onEdit, onDelete }) {
+    const canManage = user && (
+        user.id === comment.userId || user.roles?.includes('Admin')
+    );
+
     return (
         <div className="p-2 mt-3">
             <strong>{comment.username}</strong>
@@ -121,8 +125,8 @@ function CommnetDisplayMode({ comment, userId, onEdit, onDelete }) {
             <small className="text-muted">{new Date(comment.createdAt).toLocaleDateString()}</small>
             <p className="mb-1">{comment.text}</p>
 
-            {/* Edit button only for logged in user’s own comment */}
-            {userId === comment.userId && (
+            {/* Edit & delete button only for logged in user’s own comment, or admin user */}
+            {canManage && (
                 <div className="d-flex gap-2">
                     <Button
                         size="sm"
