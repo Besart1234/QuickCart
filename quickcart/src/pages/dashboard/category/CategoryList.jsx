@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "react-toastify";
 import ConfirmationModal from "../../../components/ConfirmationModal";
+import { authFetch } from "../../../utils/AuthFetch";
 
 const API_URL = 'https://localhost:7000/api';
 
@@ -16,7 +17,7 @@ function CategoryList() {
 
     const fetchCategories = async () => {
         try {
-            const res = await fetch(`${API_URL}/category`, { credentials: 'include' });
+            const res = await authFetch(`${API_URL}/category`, { credentials: 'include' });
             
             if(res.ok) {
                 const data = await res.json();
@@ -38,7 +39,7 @@ function CategoryList() {
 
     const handleDeleteCategory = async () => {
         try {
-            const res = await fetch(`${API_URL}/category/${selectedCategory.id}`, {
+            const res = await authFetch(`${API_URL}/category/${selectedCategory.id}`, {
                 method: 'DELETE',
                 credentials: 'include'
             });

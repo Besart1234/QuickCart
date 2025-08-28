@@ -4,8 +4,6 @@ import { Button, Form } from "react-bootstrap";
 import { FaStar } from "react-icons/fa";
 
 function Comments({ comments, onAdd, onUpdate, onDelete }) {
-    //const [newComment, setNewComment] = useState('');
-    //const [rating, setRating] = useState(0);
     const [editingId, setEditingId] = useState(null); // null = nothing, "new" = adding, or comment.id = editing
     const { user } = useContext(AuthContext);
 
@@ -39,20 +37,14 @@ function Comments({ comments, onAdd, onUpdate, onDelete }) {
 
         // Reset form (local state)
         setEditingId(null);
-        //setNewComment("");
-        //setRating(0);
     };
     
     const startEdit = (c) => {
         setEditingId(c.id);
-        //setNewComment(c.text);
-        //setRating(c.rating);
     };
 
     const startAdd = () => {
         setEditingId("new");
-        //setNewComment('');
-        //setRating(0);
     };
 
     return (
