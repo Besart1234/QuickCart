@@ -8,6 +8,7 @@ import Login from "./pages/auth/Login"
 import Signup from "./pages/auth/Signup"
 import Dashboard from "./pages/dashboard/Dashboard"
 import ProductDetails from "./pages/product/ProductDetails"
+import AdminLayout from "./layouts/AdminLayout"
 
 function App() {
 	return (
@@ -20,9 +21,13 @@ function App() {
 				<Route path="signup" element={<Signup />} />
 				<Route path="cart" element={<Cart />} />
 				<Route path="wishlist" element={<Wishlist />} />
-				<Route path="dashboard" element={<Dashboard />} />
 
 				<Route path="products/:id" element={<ProductDetails />}/>
+			</Route>
+
+			{/* Admin area with full-width layout */}
+			<Route path="/dashboard" element={<AdminLayout />}>
+				<Route index element={<Dashboard />} />
 			</Route>
     	</Routes>
   	)
