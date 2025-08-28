@@ -9,6 +9,7 @@ import Signup from "./pages/auth/Signup"
 import Dashboard from "./pages/dashboard/Dashboard"
 import ProductDetails from "./pages/product/ProductDetails"
 import AdminLayout from "./layouts/AdminLayout"
+import CategoryList from "./pages/dashboard/category/CategoryList"
 
 function App() {
 	return (
@@ -28,6 +29,7 @@ function App() {
 			{/* Admin area with full-width layout */}
 			<Route path="/dashboard" element={<AdminLayout />}>
 				<Route index element={<Dashboard />} />
+				<Route path="categories" element={<CategoryList />} />
 			</Route>
     	</Routes>
   	)

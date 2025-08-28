@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuickCart.API.Data;
 using QuickCart.API.Dtos.Category;
@@ -8,6 +10,8 @@ namespace QuickCart.API.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(AuthenticationSchemes = JwtBearerDefaults.AuthenticationScheme, 
+        Roles = "Admin")]
     public class CategoryController : ControllerBase
     {
         private readonly QuickCartContext _context;
@@ -18,6 +22,7 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<ActionResult<IEnumerable<CategoryResponseDto>>> GetCategories()
         {
             var categories = await _context.Category.ToListAsync();
@@ -31,6 +36,7 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpGet("{id}")]
+        [AllowAnonymous]
         public async Task<ActionResult<CategoryResponseDto>> GetCategory(int id)
         {
             var category = await _context.Category.FindAsync(id);
