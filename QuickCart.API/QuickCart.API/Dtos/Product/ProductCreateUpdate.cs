@@ -8,7 +8,7 @@ namespace QuickCart.API.Dtos.Product
         [Required]
         public string Name { get; set; } = string.Empty;
 
-        [MaxLength(100)]
+        [MaxLength(1000)]
         [Required]
         public string Description { get; set; } = string.Empty;
 
