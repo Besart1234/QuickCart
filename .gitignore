@@ -39,4 +39,5 @@ appsettings.*.json
 *.vs/
 *.csproj.user
 
-wwwroot/images/
+# Ignore product images
+QuickCart.API/QuickCart.API/wwwroot/images/products/
