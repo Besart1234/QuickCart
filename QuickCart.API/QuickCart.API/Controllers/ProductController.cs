@@ -70,7 +70,7 @@ namespace QuickCart.API.Controllers
                     {
                         Id = i.Id,
                         Url = i.Url,
-                        AltText = i.AltText,
+                        AltText = i.AltText
                     })
                     .ToList()
             };
@@ -151,7 +151,7 @@ namespace QuickCart.API.Controllers
                 {
                     Id = i.Id,
                     Url = i.Url,
-                    AltText = i.AltText,
+                    AltText = i.AltText
                 })
                 .ToListAsync();
 
@@ -168,7 +168,7 @@ namespace QuickCart.API.Controllers
                 {
                     Id = i.Id,
                     Url = i.Url,
-                    AltText = i.AltText,
+                    AltText = i.AltText
                 })
                 .FirstOrDefaultAsync();
 
@@ -179,7 +179,10 @@ namespace QuickCart.API.Controllers
 
         [HttpPost("{productId}/upload-image")]
         public async Task<ActionResult<ProductImageResponseDto>>
-            UploadImage(int productId, [FromForm] IFormFile file, [FromForm] string altText)
+            UploadImage(
+                int productId, 
+                [FromForm] IFormFile file, 
+                [FromForm] string? altText)
         {
             if (file == null || file.Length == 0)
                 return BadRequest("No file uploaded");

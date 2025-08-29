@@ -11,7 +11,7 @@ namespace QuickCart.API.Models
         public string Url { get; set; } = string.Empty;
 
         [MaxLength(200)]
-        public string AltText { get; set; } = string.Empty;
+        public string? AltText { get; set; }
 
         public int ProductId { get; set; }
         public Product Product { get; set; } = null!;

@@ -12,6 +12,7 @@ import AdminLayout from "./layouts/AdminLayout"
 import CategoryList from "./pages/dashboard/category/CategoryList"
 import CategoryForm from "./pages/dashboard/category/CategoryForm"
 import ProductList from "./pages/dashboard/product/ProductList"
+import ProductForm from "./pages/dashboard/product/ProductForm"
 
 function App() {
 	return (
@@ -37,6 +38,8 @@ function App() {
 				<Route path="categories/:id" element={<CategoryForm />} />
 
 				<Route path="products" element={<ProductList />} />
+				<Route path="products/new" element={<ProductForm />} />
+				<Route path="products/:id" element={<ProductForm />} />
 			</Route>
     	</Routes>
   	)
