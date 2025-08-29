@@ -11,6 +11,7 @@ import ProductDetails from "./pages/product/ProductDetails"
 import AdminLayout from "./layouts/AdminLayout"
 import CategoryList from "./pages/dashboard/category/CategoryList"
 import CategoryForm from "./pages/dashboard/category/CategoryForm"
+import ProductList from "./pages/dashboard/product/ProductList"
 
 function App() {
 	return (
@@ -34,6 +35,8 @@ function App() {
 				<Route path="categories" element={<CategoryList />} />
 				<Route path="categories/new" element={<CategoryForm />} />
 				<Route path="categories/:id" element={<CategoryForm />} />
+
+				<Route path="products" element={<ProductList />} />
 			</Route>
     	</Routes>
   	)
