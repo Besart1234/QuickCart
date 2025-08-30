@@ -1,15 +1,18 @@
 import { Button, Card, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { ShoppingCart, Heart } from "lucide-react";
 import './ProductCard.css'
+import { Link } from "react-router-dom";
+
+const IMG_URL = 'https://localhost:7000';
 
 function ProductCard({ product, user }) {
     return (
         <Card className="product-card shadow-sm h-100">
             <Card.Img 
                 variant="top"
-                src={product.mainImageUrl}
+                src={`${IMG_URL}${product.mainImageUrl}`}
                 alt={product.name}
-                className="product-img"
+                className="product-image"
             />
             <Card.Body>
                 <div>
@@ -19,7 +22,7 @@ function ProductCard({ product, user }) {
                     </Card.Text>
                 </div>
                 <div className='card-bottom d-flex justify-content-between align-items-center mt-3'>
-                    <Button variant='primary'>View Details</Button>
+                    <Button as={Link} to={`/products/${product.id}`} variant='primary'>View Details</Button>
                     
                     <span className={`stock-message ${product.stock > 0 ? 'text-success' : 'text-danger'}`}>
                         {product.stock > 0 ? 'In Stock' : 'Out of Stock'}

@@ -1,71 +1,112 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import { FaChevronLeft, FaChevronRight, FaStar } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import './ProductDetails.css'
 import Comments from "../../components/comments/Comments";
+import { authFetch } from "../../utils/AuthFetch";
+import ConfirmationModal from "../../components/ConfirmationModal";
+
+const API_URL = 'https://localhost:7000/api';
+const IMG_URL = "https://localhost:7000";
 
 function ProductDetails() {
     const { id } = useParams();
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [product, setProduct] = useState({
-        id: 1, 
-        name: "Laptop", 
-        price: 999, 
-        stock: 5,
-        category: 'Electronics',
-        description: 'Some descritption for this product', 
-        images: [
-            "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&h=400&fit=crop", 
-            "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&h=400&fit=crop", 
-            "https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?w=600&h=400&fit=crop", 
-        ],
-        comments: [
-            {
-                id: "64f8a0a9c7d2e8b29e9c1234",
-                userId: 3,
-                username: "Alice",
-                text: "Great product, really fast performance!",
-                createdAt: "2025-08-20T10:30:00Z",
-                rating: 5,
-            },
-            {
-                id: "64f8a0a9c7d2e8b29e9c5678",
-                userId: 4,
-                username: "Bob",
-                text: "Battery life could be better, but overall solid.",
-                createdAt: "2025-08-21T14:45:00Z",
-                rating: 3,
-            },
-        ]
-    });
+    const [product, setProduct] = useState(null);
+    const [showModal, setShowModal] = useState(false);
+    const [commentToDelete, setCommentToDelete] = useState(null);
+
+    useEffect(() => {
+        fetch(`${API_URL}/product/${id}`)
+            .then(res => res.json())
+            .then(data => setProduct(data))
+            .catch(e => console.error(e));
+    }, [id]);
+
+    if(!product) return <p className="text-center mt-5">Loading...</p>
 
     const avgRating = 
         product.comments.length > 0 
         ? product.comments.reduce((sum, c) => sum + c.rating, 0) / product.comments.length
         : 0;
         
-    const handleAddComment = (newComment) => {
-        setProduct(prev => ({
-            ...prev,
-            comments: [newComment, ...prev.comments]
-        }));
+    const handleAddComment = async (newComment) => {
+        try {
+            const res = await authFetch(`${API_URL}/product/${id}/comments`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(newComment)
+            });
+
+            if(res.ok) {
+                const createdComment = await res.json();
+                setProduct(prev => ({
+                    ...prev,
+                    comments: [createdComment, ...prev.comments]
+                }));
+            }
+            else {
+                console.error('Failed to add comment');
+            }
+        } catch (error) {
+            console.error(error);
+        }
     }
 
-    const handleUpdateComment = (updatedComment) => {
-        setProduct(prev => ({
-            ...prev, 
-            comments: prev.comments.map(c => 
-                c.id === updatedComment.id ? updatedComment : c
-            )
-        }));
+    const handleUpdateComment = async (updatedComment) => {
+        try {
+            const res = await authFetch(`${API_URL}/product/${id}/comments/${updatedComment.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(updatedComment)
+            });
+
+            if(res.ok) {
+                setProduct(prev => ({
+                    ...prev,
+                    comments: prev.comments.map(c => c.id === updatedComment.id ? updatedComment : c)
+                }));
+            }
+            else {
+                console.error("Failed to update comment");
+            }
+        } catch (error) {
+            console.error(error);
+        }
     };
 
-    const handleDeleteCommet = (id) => {
-        setProduct(prev => ({
-            ...prev,
-            comments: prev.comments.filter(c => c.id !== id)
-        }));
+    const handleDeleteCommentClick = (comment) => {
+        setCommentToDelete(comment);
+        setShowModal(true);
+    };
+
+    const confirmDeleteComment = async () => {
+        if(!commentToDelete) return;
+
+        try {
+            const res = await authFetch(`${API_URL}/product/${id}/comments/${commentToDelete.id}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            });
+
+            if(res.ok) {
+                setProduct(prev => ({
+                    ...prev,
+                    comments: prev.comments.filter(c => c.id !== commentToDelete.id)
+                }));
+            }
+            else {
+                console.error("Failed to delete comment");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+
+        setShowModal(false);
+        setCommentToDelete(null);
     };
 
     const handleNext = () => {
@@ -76,7 +117,6 @@ function ProductDetails() {
         setCurrentIndex(prev => (prev === 0 ? product.images.length - 1 : prev - 1));
     };
 
-    console.log(id);
     return (
         <Container className="my-5">
             <Row>
@@ -84,7 +124,7 @@ function ProductDetails() {
                     {/* <div className="image-slider text-center"> */}
                         <div className="image-wrapper">
                             <img 
-                                src={product.images[currentIndex]}
+                                src={`${IMG_URL}${product.images[currentIndex].url}`}
                                 alt={product.name} 
                                 className="main-image mb-3"
                             />
@@ -155,13 +195,13 @@ function ProductDetails() {
                                 })}
                             </div>
                             <span className="ms-2 text-muted">
-                                {avgRating.toFixed(1)} / 5 · {product.comments.length} reviews
+                                {avgRating.toFixed(1)} / 5 · {product.comments.length} {product.comments.length === 1 ? 'review' : 'reviews'}
                             </span>
                         </div>
                     )}
 
                     <p className="text-muted mb-1">
-                        <strong>Category: </strong>{product.category}
+                        <strong>Category: </strong>{product.categoryName}
                     </p>
                     <p>{product.description}</p>
                     <p>
@@ -191,10 +231,20 @@ function ProductDetails() {
                         comments={product.comments} 
                         onAdd={handleAddComment}
                         onUpdate={handleUpdateComment}
-                        onDelete={handleDeleteCommet} 
+                        onDelete={handleDeleteCommentClick} 
                     />
                 </Col>
             </Row>
+
+            {showModal && (
+                <ConfirmationModal 
+                    show={showModal}
+                    title='Delete comment'
+                    message='Are you sure you want to delete this comment?'
+                    onCancel={() => setShowModal(false)}
+                    onConfirm={confirmDeleteComment} 
+                />
+            )}
         </Container>
     );
 }

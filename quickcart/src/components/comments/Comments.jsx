@@ -104,7 +104,7 @@ function CommnetDisplayMode({ comment, user, onEdit, onDelete }) {
 
     return (
         <div className="p-2 mt-3">
-            <strong>{comment.username}</strong>
+            <strong>{comment.userName}</strong>
             <div className="rating">
                 {[...Array(5)].map((_, i) => (
                     <FaStar 
@@ -132,7 +132,7 @@ function CommnetDisplayMode({ comment, user, onEdit, onDelete }) {
                         size="sm"
                         variant="link"
                         className="p-0 text-danger"
-                        onClick={() => onDelete(comment.id)}
+                        onClick={() => onDelete(comment)}
                     >
                         Delete
                     </Button>

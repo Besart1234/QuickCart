@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuickCart.API.Data;
 using QuickCart.API.Dtos.Comment;
@@ -55,6 +56,20 @@ namespace QuickCart.API.Controllers
 
             if (product == null) return NotFound();
 
+            //fetch comments from Mongo
+            var comments = await _commentService
+                .GetByProductAsync(product.Id);
+
+            //collect all userIds
+            var userIds = comments
+                .Select(c => c.UserId).Distinct().ToList();
+
+            //fetch users in one query
+            var users = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id,
+                u => u.UserName);
+
             return new ProductDetailsDto
             {
                 Id = product.Id,
@@ -72,10 +87,24 @@ namespace QuickCart.API.Controllers
                         Url = i.Url,
                         AltText = i.AltText
                     })
-                    .ToList()
+                    .ToList(),
+                Comments = comments.Select(c => new CommentResponseDto
+                {
+                    Id = c.Id,
+                    ProductId = c.ProductId,
+                    UserId = c.UserId,
+                    UserName = users
+                    .TryGetValue(c.UserId, out var uname) ?
+                        uname ?? "Unknown" 
+                        : "Unknown",
+                    Text = c.Text,
+                    Rating = c.Rating,
+                    CreatedAt = c.CreatedAt
+                }).ToList()
             };
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         public async Task<ActionResult<ProductDetailsDto>>
             CreateProduct(ProductCreateUpdate newProduct)
@@ -111,6 +140,7 @@ namespace QuickCart.API.Controllers
                 new { id = product.Id }, result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         public async Task<IActionResult>
             UpdateProduct(int id, ProductCreateUpdate updatedProduct)
@@ -129,6 +159,7 @@ namespace QuickCart.API.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteProduct(int id)
         {
@@ -177,6 +208,7 @@ namespace QuickCart.API.Controllers
             return Ok(image);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost("{productId}/upload-image")]
         public async Task<ActionResult<ProductImageResponseDto>>
             UploadImage(
@@ -226,6 +258,7 @@ namespace QuickCart.API.Controllers
                 new { productId, imageId = image.Id, }, result);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPatch("{productId}/images/{imageId}")]
         public async Task<IActionResult> UpdateImageAlt(int imageId, int productId, UpdateAltTextDto dto)
         {
@@ -240,6 +273,7 @@ namespace QuickCart.API.Controllers
             return NoContent();
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{productId}/images/{imageId}")]
         public async Task<IActionResult> DeleteImageForProduct(int imageId, int productId)
         {
@@ -268,12 +302,23 @@ namespace QuickCart.API.Controllers
             GetCommentsForProduct(int productId)
         {
             var comments = await _commentService.GetByProductAsync(productId);
+
+            var userIds = comments
+                .Select(c => c.UserId).Distinct().ToList();
+
+            var users = await _context.Users
+                .Where(u => userIds.Contains(u.Id))
+                .ToDictionaryAsync(u => u.Id,
+                u => u.UserName);
             
             var response = comments.Select(c => new CommentResponseDto
             {
                 Id = c.Id,
                 ProductId = productId,
                 UserId = c.UserId,
+                UserName = users.TryGetValue(c.UserId, out var uname) ?
+                    uname ?? "Unknown" 
+                    : "Unknown",
                 Text = c.Text,
                 Rating = c.Rating,
                 CreatedAt = c.CreatedAt,
@@ -282,6 +327,7 @@ namespace QuickCart.API.Controllers
             return Ok(response);
         }
 
+        [Authorize]
         [HttpPost("{productId}/comments")]
         public async Task<ActionResult<CommentResponseDto>> 
             AddComment(int productId, CommentCreateUpdateDto newComment)
@@ -300,11 +346,18 @@ namespace QuickCart.API.Controllers
 
             await _commentService.AddAsync(comment);
 
+            // Fetch the username from SQL for this user
+            var userName = await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => u.UserName)
+                .FirstOrDefaultAsync();
+
             var response = new CommentResponseDto
             {
                 Id = comment.Id,
                 ProductId = productId,
                 UserId = userId,
+                UserName = userName ?? "Unknown",
                 Text = comment.Text,
                 Rating = comment.Rating,
                 CreatedAt = comment.CreatedAt
@@ -313,6 +366,7 @@ namespace QuickCart.API.Controllers
             return Ok(response);
         }
 
+        [Authorize]
         [HttpPut("{productId}/comments/{commentId}")]
         public async Task<IActionResult> 
             UpdateComment(
@@ -335,6 +389,7 @@ namespace QuickCart.API.Controllers
             return NoContent();
         }
 
+        [Authorize]
         [HttpDelete("{productId}/comments/{commentId}")]
         public async Task<IActionResult> 
             DeleteComment(int productId, string commentId)

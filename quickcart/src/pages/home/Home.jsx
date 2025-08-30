@@ -1,43 +1,37 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import { Col, Container, Row } from "react-bootstrap";
 import ProductCard from "../../components/product/ProductCard";
+import { toast } from "react-toastify";
+
+const API_URL = 'https://localhost:7000/api';
 
 function Home() {
     const { user } = useContext(AuthContext);
+    const [products, setProducts] = useState([]);
 
-    //Temporary mock data
-    const products = [
-        { 
-            id: 1, 
-            name: "Laptop", 
-            price: 999, 
-            stock: 5, 
-            mainImageUrl: "https://images.unsplash.com/photo-1517336714731-489689fd1ca8?w=600&h=400&fit=crop" 
-        },
-        { 
-            id: 2, 
-            name: "Smartphone", 
-            price: 499, 
-            stock: 0, 
-            mainImageUrl: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=600&h=400&fit=crop" 
-        },
-        { 
-            id: 3, 
-            name: "Smartwatch", 
-            price: 199, 
-            stock: 10, 
-            mainImageUrl: "https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?w=600&h=400&fit=crop" 
-        },
-        { 
-            id: 4, 
-            name: "Tablet", 
-            price: 299, 
-            stock: 6, 
-            mainImageUrl: "https://images.unsplash.com/photo-1556656793-08538906a9f8?w=600&h=400&fit=crop" 
-        },
-    ];
+    const fetchProducts = async () => {
+        try {
+            const res = await fetch(`${API_URL}/product`);
 
+            if(res.ok) {
+                const data = await res.json();
+                setProducts(data);
+            }
+            else {
+                toast.error('Could not fetch products');
+            }
+        } catch (error) {
+            console.error(error);
+            toast.error('An error occurred while fetching products');
+        }
+    };
+
+    useEffect(() => {
+        fetchProducts();
+    }, []);
+
+    console.log
     return (
         <Container className="py-4">
             <Row>

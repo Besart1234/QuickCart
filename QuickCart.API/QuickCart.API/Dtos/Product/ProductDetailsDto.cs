@@ -1,4 +1,5 @@
-﻿using QuickCart.API.Dtos.ProductImage;
+﻿using QuickCart.API.Dtos.Comment;
+using QuickCart.API.Dtos.ProductImage;
 
 namespace QuickCart.API.Dtos.Product
 {
@@ -12,5 +13,6 @@ namespace QuickCart.API.Dtos.Product
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
         public List<ProductImageResponseDto> Images { get; set; } = new();
+        public List<CommentResponseDto> Comments { get; set; } = new();
     }
 }
