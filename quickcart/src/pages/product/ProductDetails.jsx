@@ -121,7 +121,7 @@ function ProductDetails() {
         <Container className="my-5">
             <Row>
                 <Col md={6}>
-                    {/* <div className="image-slider text-center"> */}
+                    <div className="image-slider text-center">
                         <div className="image-wrapper">
                             <img 
                                 src={`${IMG_URL}${product.images[currentIndex].url}`}
@@ -141,7 +141,7 @@ function ProductDetails() {
                                 <FaChevronRight size={20} />
                             </Button>
                         </div>
-                    {/* </div> */}
+                    </div>
                 </Col>
                 <Col md={6}>
                     <h2>{product.name}</h2>

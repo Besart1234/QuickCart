@@ -25,14 +25,26 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<ProductSummaryDto>>> GetProducts()
+        public async Task<ActionResult<IEnumerable<ProductSummaryDto>>>
+            GetProducts([FromQuery] string? search)
         {
-            var products = await _context.Product
+            var query = _context.Product
                 .Include(p => p.Category)
                 .Include(p => p.Images)
-                .ToListAsync();
+                .AsQueryable(); //Convert to IQueryable to allow filtering
 
-            return products.Select(p => new ProductSummaryDto
+            //Apply search filtering if the 'search' parameter is provided
+            if(!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(p => 
+                    p.Name.Contains(search) ||
+                    p.Description.Contains(search) ||
+                    p.Category.Name.Contains(search));
+            }
+
+            var products = await query.ToListAsync();
+
+            var productDtos = products.Select(p => new ProductSummaryDto
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -44,6 +56,8 @@ namespace QuickCart.API.Controllers
                     .Select(i => i.Url)
                     .FirstOrDefault() ?? string.Empty
             }).ToList();
+
+            return Ok(new { Products = productDtos });
         }
 
         [HttpGet("{id}")]
