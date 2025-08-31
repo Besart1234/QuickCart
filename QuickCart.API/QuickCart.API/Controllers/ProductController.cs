@@ -26,7 +26,9 @@ namespace QuickCart.API.Controllers
 
         [HttpGet]
         public async Task<ActionResult<IEnumerable<ProductSummaryDto>>>
-            GetProducts([FromQuery] string? search)
+            GetProducts(
+            [FromQuery] string? search,
+            [FromQuery] int? categoryId = null)
         {
             var query = _context.Product
                 .Include(p => p.Category)
@@ -40,6 +42,12 @@ namespace QuickCart.API.Controllers
                     p.Name.Contains(search) ||
                     p.Description.Contains(search) ||
                     p.Category.Name.Contains(search));
+            }
+
+            if(categoryId.HasValue)
+            {
+                query = query
+                    .Where(p => p.CategoryId == categoryId.Value);
             }
 
             var products = await query.ToListAsync();
