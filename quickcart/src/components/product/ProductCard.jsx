@@ -14,7 +14,7 @@ function ProductCard({ product, user }) {
                 alt={product.name}
                 className="product-image"
             />
-            <Card.Body>
+            <Card.Body className="d-flex flex-column justify-content-between">
                 <div>
                     <Card.Title>{product.name}</Card.Title>
                     <Card.Text className="card-price highlight">

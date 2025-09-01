@@ -1,10 +1,9 @@
 import { useEffect, useState } from "react";
 import { Form, InputGroup, Button } from "react-bootstrap";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 function ProductSearch() {
-    const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
+    const [searchParams, setSearchParams] = useSearchParams();
     const [searchText, setSearchText] = useState(searchParams.get('search') || '');
 
     useEffect(() => {
@@ -13,7 +12,17 @@ function ProductSearch() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        navigate(searchText.trim() ? `/?search=${searchText.trim()}` : `/`);
+        
+        const params = new URLSearchParams(searchParams);
+
+        if(searchText.trim()) {
+            params.set('search', searchText.trim());
+        }
+        else {
+            params.delete('search');
+        }
+
+        setSearchParams(params);
     };
 
     return (

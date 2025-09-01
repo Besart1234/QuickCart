@@ -28,7 +28,8 @@ namespace QuickCart.API.Controllers
         public async Task<ActionResult<IEnumerable<ProductSummaryDto>>>
             GetProducts(
             [FromQuery] string? search,
-            [FromQuery] int? categoryId = null)
+            [FromQuery] int? categoryId = null,
+            [FromQuery] string? price = null)
         {
             var query = _context.Product
                 .Include(p => p.Category)
@@ -48,6 +49,27 @@ namespace QuickCart.API.Controllers
             {
                 query = query
                     .Where(p => p.CategoryId == categoryId.Value);
+            }
+
+            if (!string.IsNullOrEmpty(price))
+            {
+                switch (price)
+                {
+                    case "under10":
+                        query = query.Where(p => p.Price < 10);
+                        break;
+                    case "10to50":
+                        query = query
+                            .Where(p => p.Price >= 10 && p.Price <= 50);
+                        break;
+                    case "50to100":
+                        query = query
+                            .Where(p => p.Price > 50 && p.Price <= 100);
+                        break;
+                    case "over100":
+                        query = query.Where(p => p.Price > 100);
+                        break;
+                }
             }
 
             var products = await query.ToListAsync();

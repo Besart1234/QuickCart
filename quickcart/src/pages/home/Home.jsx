@@ -6,6 +6,7 @@ import { toast } from "react-toastify";
 import { useSearchParams } from "react-router-dom";
 import ProductSearch from "../../components/product/ProductSearch";
 import CategoryFilter from "../../components/category/CategoryFilter";
+import PriceFilter from "../../components/product/PriceFilter";
 
 const API_URL = 'https://localhost:7000/api';
 
@@ -18,6 +19,7 @@ function Home() {
 
     const searchQuery = searchParams.get('search') || '';
     const categoryId = searchParams.get('categoryId') || '';
+    const priceParam = searchParams.get('price') || '';
 
     //Fetch categories
     useEffect(() => {
@@ -27,12 +29,13 @@ function Home() {
             .catch(e => console.error(e));
     }, []);
 
-    const fetchProducts = async (query = '', categoryId = '') => {
+    const fetchProducts = async (query = '', categoryId = '', price = '') => {
         setLoading(true);
 
         const url = new URL(`${API_URL}/product`);
         if(query) url.searchParams.append('search', query);
-        if(category) url.searchParams.append('categoryId', categoryId);
+        if(categoryId) url.searchParams.append('categoryId', categoryId);
+        if(price) url.searchParams.append('price', price);
 
         try {
             const res = await fetch(url);
@@ -52,9 +55,9 @@ function Home() {
     };
 
     useEffect(() => {
-        fetchProducts(searchQuery, categoryId);
+        fetchProducts(searchQuery, categoryId, priceParam);
         window.scrollTo(0, 0); //scroll to top on new search
-    }, [searchQuery, categoryId]);
+    }, [searchQuery, categoryId, priceParam]);
 
     const handleCategoryChange = (categoryId) => {
         const params = new URLSearchParams(searchParams);
@@ -65,18 +68,33 @@ function Home() {
         setSearchParams(params);
     };
 
+    const handlePriceFilterChange = (price) => {
+        const params = new URLSearchParams(searchParams);
+
+        if(price) params.set('price', price);
+        else params.delete('price');
+
+        setSearchParams(params);
+    };
+
     return (
-        <Container className="py-4">
+        <>
             <h2>{searchQuery ? `Search results for '${searchQuery}'` : ''}</h2>
             <Row className="align-items-center mb-3 flex-wrap">
                 <Col xs={12} md={6} lg={5} className="mb-2 mb-md-0">
                     <ProductSearch />
                 </Col>
-                <Col className="ms-auto d-flex justify-content-end gap-2" xs="auto">
+
+                <Col xs='auto' className="ms-auto d-flex justify-content-end gap-2">
                     <CategoryFilter 
                         categories={categories}
                         selectedCategoryId={categoryId}
                         onCategoryChange={handleCategoryChange}
+                    />
+
+                    <PriceFilter 
+                        selectedPrice={priceParam}
+                        onChange={handlePriceFilterChange}
                     />
                 </Col>
             </Row>
@@ -89,7 +107,7 @@ function Home() {
                     ))}
                 </Row>
             )}
-        </Container>
+        </>
     );
 }
 
