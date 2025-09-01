@@ -29,7 +29,9 @@ namespace QuickCart.API.Controllers
             GetProducts(
             [FromQuery] string? search,
             [FromQuery] int? categoryId = null,
-            [FromQuery] string? price = null)
+            [FromQuery] string? price = null,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
             var query = _context.Product
                 .Include(p => p.Category)
@@ -45,12 +47,14 @@ namespace QuickCart.API.Controllers
                     p.Category.Name.Contains(search));
             }
 
+            //category filtering
             if(categoryId.HasValue)
             {
                 query = query
                     .Where(p => p.CategoryId == categoryId.Value);
             }
 
+            //price filtering
             if (!string.IsNullOrEmpty(price))
             {
                 switch (price)
@@ -72,7 +76,18 @@ namespace QuickCart.API.Controllers
                 }
             }
 
-            var products = await query.ToListAsync();
+            // --- pagination ---
+            var totalProducts = await _context.Product.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalProducts / pageSize);
+
+            if (totalPages == 0) totalPages = 1; // safety: at least 1 page
+            if(page > totalPages) page = totalPages;
+            if(page < 1) page = 1;
+
+            var products = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
 
             var productDtos = products.Select(p => new ProductSummaryDto
             {
@@ -87,7 +102,12 @@ namespace QuickCart.API.Controllers
                     .FirstOrDefault() ?? string.Empty
             }).ToList();
 
-            return Ok(new { Products = productDtos });
+            return Ok(new { 
+                TotalProducts = totalProducts,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                Products = productDtos 
+            });
         }
 
         [HttpGet("{id}")]

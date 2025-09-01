@@ -2,26 +2,52 @@ import { useEffect, useState } from "react";
 import { authFetch } from "../../../utils/AuthFetch";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import { toast } from "react-toastify";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 
 const API_URL = 'https://localhost:7000/api';
+const PAGE_SIZE = 10;
 
 function ProductList() {
     const [products, setProducts] = useState([]);
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [showModal, setShowModal] = useState(false);
 
-    useEffect(() => {
-        fetchProducts();
-    }, []);
+    const [searchParams, setSearchParams] = useSearchParams();
+    const pageParam = parseInt(searchParams.get('page')) || 1;
+    const [totalPages, setTotalPages] = useState(1);
 
-    const fetchProducts = async () => {
+    useEffect(() => {
+        fetchProducts(pageParam);
+    }, [pageParam]);
+
+    // Validate page number after we know totalPages
+    useEffect(() => {
+        if(totalPages > 0) {
+            if(pageParam > totalPages) {
+                setSearchParams(prev => {
+                    const params = new URLSearchParams(prev);
+                    params.set('page', totalPages);
+                    return params;
+                }, { replace: true });
+            }
+            if(pageParam < 1) {
+                setSearchParams(prev => {
+                    const params = new URLSearchParams(prev);
+                    params.set('page', 1);
+                    return params;
+                }, { replace: true });
+            }
+        }
+    }, [pageParam, totalPages]);
+
+    const fetchProducts = async (currentPage = 1) => {
         try {
-            const res = await authFetch(`${API_URL}/product`, { credentials: 'include' });
+            const res = await authFetch(`${API_URL}/product/?page=${currentPage}&pageSize=${PAGE_SIZE}`, { credentials: 'include' });
 
             if(res.ok) {
                 const data = await res.json();
-                setProducts(data);
+                setProducts(data.products);
+                setTotalPages(data.totalPages);
             }
             else {
                 console.error('Failed to load products');
@@ -54,10 +80,14 @@ function ProductList() {
         }
     };
 
+    const goToPage = (newPage) => {
+        if(newPage >=1 && newPage <= totalPages) setSearchParams({ page: newPage });
+    };
+
     if(products.length === 0) return <p className="text-muted">No products yet</p>
 
     return (
-        <div className="d-flex flex-column">
+        <div className="d-flex flex-column" style={{ minHeight: '85vh' }}>
             <div>
                 <h3 className="h3 mb-4 text-gray-800">Products</h3>
                 <Link to='/dashboard/products/new' className="btn btn-success mb-3">Add Product</Link>
@@ -99,6 +129,16 @@ function ProductList() {
                     onConfirm={handleDeleteProduct}
                 />
             )}
+
+            <div className="d-flex justify-content-between align-items-center mt-auto pt-3">
+                <button className="btn btn-secondary" onClick={() => goToPage(pageParam - 1)} disabled={pageParam === 1}>
+                    Previous
+                </button>
+                <span>Page {pageParam} of {totalPages}</span>
+                <button className="btn btn-secondary" onClick={() => goToPage(pageParam + 1)} disabled={pageParam === totalPages}>
+                    Next
+                </button>
+            </div>
         </div>
     );
 }

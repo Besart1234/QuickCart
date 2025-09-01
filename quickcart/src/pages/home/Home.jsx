@@ -16,10 +16,12 @@ function Home() {
     const [loading, setLoading] = useState(true);
     const [searchParams, setSearchParams] = useSearchParams();
     const [categories, setCategories] = useState([]);
+    const [totalPages, setTotalPages] = useState(1);
 
     const searchQuery = searchParams.get('search') || '';
     const categoryId = searchParams.get('categoryId') || '';
     const priceParam = searchParams.get('price') || '';
+    const pageParam = parseInt(searchParams.get('page')) || 1;
 
     //Fetch categories
     useEffect(() => {
@@ -29,13 +31,15 @@ function Home() {
             .catch(e => console.error(e));
     }, []);
 
-    const fetchProducts = async (query = '', categoryId = '', price = '') => {
+    const fetchProducts = async (query = '', categoryId = '', price = '', page = 1) => {
         setLoading(true);
 
         const url = new URL(`${API_URL}/product`);
         if(query) url.searchParams.append('search', query);
         if(categoryId) url.searchParams.append('categoryId', categoryId);
         if(price) url.searchParams.append('price', price);
+        url.searchParams.append('page', page);
+        url.searchParams.append('pageSize', 12);
 
         try {
             const res = await fetch(url);
@@ -43,6 +47,7 @@ function Home() {
             if(res.ok) {
                 const data = await res.json();
                 setProducts(data.products);
+                setTotalPages(data.totalPages);
                 setLoading(false);
             }
             else {
@@ -55,9 +60,49 @@ function Home() {
     };
 
     useEffect(() => {
-        fetchProducts(searchQuery, categoryId, priceParam);
+        fetchProducts(searchQuery, categoryId, priceParam, pageParam);
         window.scrollTo(0, 0); //scroll to top on new search
-    }, [searchQuery, categoryId, priceParam]);
+    }, [searchQuery, categoryId, priceParam, pageParam]);
+
+    useEffect(() => {
+        // once products are loaded and we know totalPages, validate page
+        if(totalPages > 0 && pageParam > totalPages) {
+            setSearchParams(prev => {
+                const params = new URLSearchParams(prev);
+                params.set('page', totalPages);
+                return params;
+            }, { replace: true }); // replace so user’s history isn’t spammed
+        }
+        if(pageParam < 1) {
+            setSearchParams(prev => {
+                const params = new URLSearchParams(prev);
+                params.set('page', 1);
+                return params;
+            }, { replace: true });
+        }
+    }, [totalPages, pageParam]);
+
+    const handleNextPage = () => {
+        if(pageParam < totalPages) {
+            const nextPage = pageParam + 1;
+            setSearchParams(prev => {
+                const params = new URLSearchParams(prev);
+                params.set('page', nextPage);
+                return params;
+            });
+        }
+    };
+
+    const handlePreviousPage = () => {
+        if(pageParam > 1) {
+            const previousPage = pageParam - 1;
+            setSearchParams(prev => {
+                const params = new URLSearchParams(prev);
+                params.set('page', previousPage);
+                return params;
+            });
+        }
+    };
 
     const handleCategoryChange = (categoryId) => {
         const params = new URLSearchParams(searchParams);
@@ -107,6 +152,12 @@ function Home() {
                     ))}
                 </Row>
             )}
+
+            <div className="d-flex justify-content-between my-4">
+                <button variant='secondary' onClick={handlePreviousPage} disabled={pageParam === 1}>Previous</button>
+                <span className='mx-3'>Page {pageParam} of {totalPages}</span>
+                <button variant='secondary' onClick={handleNextPage} disabled={pageParam === totalPages}>Next</button>
+            </div>
         </>
     );
 }
