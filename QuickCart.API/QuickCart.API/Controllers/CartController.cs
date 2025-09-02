@@ -46,6 +46,7 @@ namespace QuickCart.API.Controllers
                     //Ensure quantity doesn't exceed stock
                     item.Quantity = Math.Min(item.Quantity, product.Stock);//If the quantity in the cart is higher than the available stock, reduce it
                     item.ImageUrl = product.Images?.FirstOrDefault()?.Url;
+                    item.Stock = product.Stock;
                     updatedCartItems.Add(item);
                 }
             }

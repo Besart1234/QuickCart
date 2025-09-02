@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 import { authFetch } from "../utils/AuthFetch";
 import { AuthContext } from "./AuthContext";
 
@@ -8,22 +8,29 @@ export const CartContext = createContext(null);
 
 function CartProvider({ children }) {
     const { user } = useContext(AuthContext); //get user from auth
-    const [cartCount, setCartCount] = useState(0);
+    const [items, setItems] = useState([]);
+    const [loading, setLoading] = useState(false);
 
-    const fetchCartCount = async () => {
+    const fetchCart = async () => {
+        if(!user) return;
+
         try {
+            setLoading(true); // start loading
             const res = await authFetch(`${API_URL}/cart`);
 
             if(!res.ok) return;
-
+                
             const data = await res.json();
-            setCartCount(data.items.reduce((sum, item) => sum + item.quantity, 0));
+            setItems(data.items ?? []);
         } catch (error) {
-            console.error(error);
+            console.error("Failed to load cart", error);
+        } finally {
+            setLoading(false);
         }
     };
 
-    const addToCart = async (productId, quantity) => {
+    //Add to cart -> refresh cart after success
+    const addToCart = async (productId, quantity = 1) => {
         const res = await authFetch(`${API_URL}/cart/add`, {
             method: 'POST', 
             headers: { 'Content-Type': 'application/json' },
@@ -31,22 +38,74 @@ function CartProvider({ children }) {
             body: JSON.stringify({ productId, quantity })
         });
 
-        if(res.ok) {
-            await fetchCartCount(); //refresh cart count 
-        }
-        else {
-            throw new Error('Failed to add to cart');
-        }
+        if(!res.ok) throw new Error('Failed to add to cart');
+        
+        fetchCart();
+    };
+
+    // Increase quantity by 1
+    const increaseQuantity = async (productId) => {
+        const res = await authFetch(`${API_URL}/cart/add`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }, 
+            credentials: 'include',
+            body: JSON.stringify({ productId, quantity: 1 })
+        });
+
+        if(!res.ok) throw new Error("Failed to increase quantity");
+        await fetchCart();
+    };
+
+    // Decrease quantity by 1
+    const decreaseQuantity = async (productId) => {
+        const res = await authFetch(`${API_URL}/cart/decrease`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' }, 
+            credentials: 'include',
+            body: JSON.stringify({ productId })
+        });
+
+        if(!res.ok) throw new Error('Failed to decrease quantity');
+        await fetchCart();
+    };
+
+    // Remove a product from cart
+    const removeItem = async (productId) => {
+        const res = await authFetch(`${API_URL}/cart/remove/${productId}`, { method: 'DELETE' });
+
+        if (!res.ok) throw new Error('Failed to remove item');
+        await fetchCart();
+    };
+
+    const clearCart = async () => {
+        const res = await authFetch(`${API_URL}/cart/clear`, { method: 'POST' });
+
+        if(!res.ok) throw new Error('Failed to clear cart');
+        setItems([]);
     };
 
     // React to user changes
     useEffect(() => {
-        if(user) fetchCartCount(); // logged in → fetch cart
-        else setCartCount(0); // logged out → clear cart 
+        if(user) fetchCart(); // logged in → fetch cart
+        else setItems([]); // logged out → clear cart 
     }, [user]);
 
+    const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
+    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.currentPrice, 0);
+
     return (
-        <CartContext.Provider value={{ cartCount, setCartCount, fetchCartCount, addToCart }}>
+        <CartContext.Provider value={{ 
+            cartCount, 
+            subtotal, 
+            items, 
+            loading, 
+            fetchCart, 
+            addToCart, 
+            increaseQuantity, 
+            decreaseQuantity, 
+            removeItem, 
+            clearCart 
+        }}>
             {children}
         </CartContext.Provider>
     );
