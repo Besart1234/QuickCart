@@ -2,10 +2,30 @@ import { Button, Card, OverlayTrigger, Tooltip } from "react-bootstrap";
 import { ShoppingCart, Heart } from "lucide-react";
 import './ProductCard.css'
 import { Link } from "react-router-dom";
+import { useContext } from "react";
+import { AuthContext } from "../../contexts/AuthContext";
+import { CartContext } from "../../contexts/CartContext";
+import { toast } from "react-toastify";
 
 const IMG_URL = 'https://localhost:7000';
+const API_URL = 'https://localhost:7000/api';
 
-function ProductCard({ product, user }) {
+function ProductCard({ product }) {
+    const { user } = useContext(AuthContext);
+    const { addToCart } = useContext(CartContext);
+
+    const handleAddToCart = async () => {
+        if(!user) return;
+
+        try {
+            await addToCart(product.id, 1); // context handles API + cartCount
+            toast.success(`'${product.name}' added to cart`);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to add product to cart');
+        }
+    };
+
     return (
         <Card className="product-card shadow-sm h-100">
             <Card.Img 
@@ -47,6 +67,7 @@ function ProductCard({ product, user }) {
                             overlay={<Tooltip>Add to Cart</Tooltip>}
                         >
                             <Button 
+                                onClick={handleAddToCart}
                                 disabled={product.stock < 1 || !user} 
                                 variant='light' 
                                 className='icon-button'

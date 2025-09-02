@@ -1,6 +1,5 @@
-import { useContext, useEffect, useState } from "react";
-import { AuthContext } from "../../contexts/AuthContext";
-import { Col, Container, Row } from "react-bootstrap";
+import { useEffect, useState } from "react";
+import { Col, Row } from "react-bootstrap";
 import ProductCard from "../../components/product/ProductCard";
 import { toast } from "react-toastify";
 import { useSearchParams } from "react-router-dom";
@@ -11,7 +10,6 @@ import PriceFilter from "../../components/product/PriceFilter";
 const API_URL = 'https://localhost:7000/api';
 
 function Home() {
-    const { user } = useContext(AuthContext);
     const [products, setProducts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchParams, setSearchParams] = useSearchParams();
@@ -147,7 +145,7 @@ function Home() {
                 <Row>
                     {products.map(product => (
                         <Col key={product.id} md={4} className="mb-4">
-                            <ProductCard product={product} user={user} />
+                            <ProductCard product={product}/>
                         </Col>
                     ))}
                 </Row>

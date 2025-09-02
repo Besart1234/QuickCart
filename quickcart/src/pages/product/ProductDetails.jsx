@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import { FaChevronLeft, FaChevronRight, FaStar } from "react-icons/fa";
 import { useParams } from "react-router-dom";
@@ -6,6 +6,9 @@ import './ProductDetails.css'
 import Comments from "../../components/comments/Comments";
 import { authFetch } from "../../utils/AuthFetch";
 import ConfirmationModal from "../../components/ConfirmationModal";
+import { CartContext } from "../../contexts/CartContext";
+import { AuthContext } from "../../contexts/AuthContext";
+import { toast } from "react-toastify";
 
 const API_URL = 'https://localhost:7000/api';
 const IMG_URL = "https://localhost:7000";
@@ -16,6 +19,9 @@ function ProductDetails() {
     const [product, setProduct] = useState(null);
     const [showModal, setShowModal] = useState(false);
     const [commentToDelete, setCommentToDelete] = useState(null);
+
+    const { addToCart } = useContext(CartContext);
+    const { user } = useContext(AuthContext);
 
     useEffect(() => {
         fetch(`${API_URL}/product/${id}`)
@@ -117,6 +123,18 @@ function ProductDetails() {
         setCurrentIndex(prev => (prev === 0 ? product.images.length - 1 : prev - 1));
     };
 
+    const handleAddToCart = async () => {
+        if(!user) return;
+
+        try {
+            await addToCart(id, 1); //context handles API + cart count
+            toast.success(`Product added to cart`);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to add product to cart');
+        }
+    };
+
     return (
         <Container className="my-5">
             <Row>
@@ -213,13 +231,14 @@ function ProductDetails() {
                     </p>
                     <div className="mt-4">
                         <Button
-                            disabled={product.stock === 0}
+                            onClick={handleAddToCart}
+                            disabled={product.stock === 0 || !user}
                             variant="success" 
                             className="me-3"
                         >
                             Add to Cart
                         </Button>
-                        <Button variant="outline-secondary">Add to Wishlist</Button>
+                        <Button variant="outline-secondary" disabled={!user}>Add to Wishlist</Button>
                     </div>
                 </Col>
             </Row>

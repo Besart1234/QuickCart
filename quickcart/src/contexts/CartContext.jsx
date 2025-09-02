@@ -23,6 +23,22 @@ function CartProvider({ children }) {
         }
     };
 
+    const addToCart = async (productId, quantity) => {
+        const res = await authFetch(`${API_URL}/cart/add`, {
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ productId, quantity })
+        });
+
+        if(res.ok) {
+            await fetchCartCount(); //refresh cart count 
+        }
+        else {
+            throw new Error('Failed to add to cart');
+        }
+    };
+
     // React to user changes
     useEffect(() => {
         if(user) fetchCartCount(); // logged in → fetch cart
@@ -30,7 +46,7 @@ function CartProvider({ children }) {
     }, [user]);
 
     return (
-        <CartContext.Provider value={{ cartCount, setCartCount, fetchCartCount }}>
+        <CartContext.Provider value={{ cartCount, setCartCount, fetchCartCount, addToCart }}>
             {children}
         </CartContext.Provider>
     );
