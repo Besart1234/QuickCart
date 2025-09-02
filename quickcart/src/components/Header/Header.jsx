@@ -3,9 +3,12 @@ import { Link } from "react-router-dom";
 import { useContext, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import './Header.css'
+import { CartContext } from "../../contexts/CartContext";
+import { FaShoppingCart } from "react-icons/fa";
 
 function Header(){
     const { user, logout, loading } = useContext(AuthContext);
+    const { cartCount } = useContext(CartContext);
 
     return (
         <Navbar bg="light" expand="lg" className="shadow-sm">
@@ -26,24 +29,33 @@ function Header(){
                             <Nav.Link as={Link} to="/signup">Sign Up</Nav.Link>
                         </>
                         ) : (
-                            <NavDropdown 
-                                title={
-                                    <span className="user-dropdown">
-                                        {user.userName}
-                                    </span>
-                                }
-                                id="user-menu" 
-                                align="end"
-                                className="custom-dropdown"
-                            >
-                                <NavDropdown.Item as={Link} to="/cart">Cart</NavDropdown.Item>
-                                <NavDropdown.Item as={Link} to="/wishlist">Wishlist</NavDropdown.Item>
-                                {user.roles.includes('Admin') && (
-                                    <NavDropdown.Item as={Link} to="/dashboard">Dashboard</NavDropdown.Item>
-                                )}
-                                <NavDropdown.Divider />
-                                <NavDropdown.Item onClick={logout}>Logout</NavDropdown.Item>
-                            </NavDropdown>
+                            <>
+                                {/* Cart link */}
+                                <Nav.Link as={Link} to='/cart' className="d-flex align-items-center">
+                                    <FaShoppingCart />
+                                    <span className="ms-1">Cart ({cartCount})</span>
+                                </Nav.Link>
+
+                                {/* User dropdown */}
+                                <NavDropdown 
+                                    title={
+                                        <span className="user-dropdown">
+                                            {user.userName}
+                                        </span>
+                                    }
+                                    id="user-menu" 
+                                    align="end"
+                                    className="custom-dropdown"
+                                >
+                                    <NavDropdown.Item as={Link} to="/cart">Cart</NavDropdown.Item>
+                                    <NavDropdown.Item as={Link} to="/wishlist">Wishlist</NavDropdown.Item>
+                                    {user.roles.includes('Admin') && (
+                                        <NavDropdown.Item as={Link} to="/dashboard">Dashboard</NavDropdown.Item>
+                                    )}
+                                    <NavDropdown.Divider />
+                                    <NavDropdown.Item onClick={logout}>Logout</NavDropdown.Item>
+                                </NavDropdown>
+                            </>
                         )
                     )}
                 </Nav>
