@@ -106,12 +106,12 @@ function CartProvider({ children }) {
     }, [user, fetchCart]);
 
     const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = items.reduce((sum, item) => sum + item.quantity * item.currentPrice, 0);
+    const total = items.reduce((sum, item) => sum + item.quantity * item.currentPrice, 0);
 
     return (
         <CartContext.Provider value={{ 
             cartCount, 
-            subtotal, 
+            total, 
             items, 
             loading,
             loaded, 

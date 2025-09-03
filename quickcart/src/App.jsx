@@ -14,6 +14,7 @@ import CategoryForm from "./pages/dashboard/category/CategoryForm"
 import ProductList from "./pages/dashboard/product/ProductList"
 import ProductForm from "./pages/dashboard/product/ProductForm"
 import CheckoutPage from "./pages/order/CheckoutPage"
+import OrderSummaryPage from "./pages/order/OrderSummaryPage"
 
 function App() {
 	return (
@@ -30,6 +31,7 @@ function App() {
 				<Route path="products/:id" element={<ProductDetails />}/>
 
 				<Route path="/checkout" element={<CheckoutPage />} />
+				<Route path="/orders/:orderId" element={<OrderSummaryPage />} />
 			</Route>
 
 			{/* Admin area with full-width layout */}

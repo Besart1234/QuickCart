@@ -10,7 +10,7 @@ const API_URL = "https://localhost:7000/api";
 
 function CheckoutPage() {
     const { user, loading: authLoading } = useContext(AuthContext);
-    const { fetchCart, items: cartItems, clearCart, loading: cartLoading, subtotal, loaded: cartLoaded } = useContext(CartContext);
+    const { fetchCart, items: cartItems, clearCart, loading: cartLoading, total, loaded: cartLoaded } = useContext(CartContext);
     const [customAddress, setCustomAddress] = useState({
         street: '',
         city: '',
@@ -20,6 +20,7 @@ function CheckoutPage() {
     });
     const [placingOrder, setPlacingOrder] = useState(false);
     const navigate = useNavigate();
+    const [orderPlaced, setOrderPlaced] = useState(false);
 
     useEffect(() => {
         if(user) fetchCart();
@@ -67,7 +68,7 @@ function CheckoutPage() {
             if(res.ok) {
                 const created = await res.json();
                 toast.success('Order placed successfully');
-
+                setOrderPlaced(true);
                 await clearCart();
 
                 navigate(`/orders/${created.id}`, { state: { fromCheckout: true } });
@@ -91,8 +92,9 @@ function CheckoutPage() {
     if(!cartLoaded || cartLoading) return <p className="p-4">Loading cart...</p>;
 
     // now it's safe to check contents
-    if(cartItems.length === 0) return <Navigate to='/cart' replace />;//Only redirect to /cart if we’re sure the cart is empty after it's been loaded
-    
+    //After you place an order, the orderPlaced flag suppresses the "empty cart → go to /cart" redirect.
+    if(!orderPlaced && cartItems.length === 0) return <Navigate to='/cart' replace />;//Only redirect to /cart if we’re sure the cart is empty after it's been loaded
+
     return (
         <Container className="py-4">
             <h1 className="h3 mb-4">Checkout</h1>
@@ -134,7 +136,7 @@ function CheckoutPage() {
                 </Card>
             ))}
             <hr />
-            <p className="h5">Total: ${subtotal.toFixed(2)}</p>
+            <p className="h5">Total: ${total.toFixed(2)}</p>
             <div className="d-flex gap-2 mt-3">
                 <Button variant="secondary" onClick={() => navigate('/cart')}>Back to Cart</Button>
                 <Button variant="success" onClick={handlePlaceOrder} disabled={placingOrder}>

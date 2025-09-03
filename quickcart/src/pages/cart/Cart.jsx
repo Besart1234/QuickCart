@@ -8,7 +8,7 @@ import CartItemCard from "../../components/cart/CartItemCard";
 function Cart() {
     const navigate = useNavigate();
     const { user, loading: authLoading } = useContext(AuthContext);
-    const { items, loading, subtotal, increaseQuantity, decreaseQuantity, removeItem, clearCart } = useContext(CartContext);
+    const { items, loading, total, increaseQuantity, decreaseQuantity, removeItem, clearCart } = useContext(CartContext);
 
     if (authLoading) return null;
     if (!user) return <Navigate to="/login" replace />;
@@ -75,7 +75,7 @@ function Cart() {
                     <hr className="my-4"/>
                     <div className="d-flex justify-content-between align-items-center">
                         <div>
-                            <p className="h5">Total: ${subtotal.toFixed(2)}</p>
+                            <p className="h5">Total: ${total.toFixed(2)}</p>
                         </div>
                         <div className="d-flex gap-2">
                             <button type="button" onClick={handleClearCart} className="btn btn-danger">Clear Cart</button>
