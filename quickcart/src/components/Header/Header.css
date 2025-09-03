@@ -11,3 +11,7 @@
 .navbar .dropdown-toggle.show::after {
   transform: rotate(180deg);
 }
+
+.cart-link {
+  white-space: nowrap;
+}

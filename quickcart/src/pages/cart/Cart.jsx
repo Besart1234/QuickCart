@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, Link } from "react-router-dom";
 import { AuthContext } from "../../contexts/AuthContext";
 import { CartContext } from "../../contexts/CartContext";
 import { toast } from "react-toastify";
@@ -79,7 +79,7 @@ function Cart() {
                         </div>
                         <div className="d-flex gap-2">
                             <button type="button" onClick={handleClearCart} className="btn btn-danger">Clear Cart</button>
-                            <button className="btn btn-success" onClick={() => navigate('/checkout')}>Proceed to Checkout</button>
+                            <Link className="btn btn-success" to='/checkout'>Proceed to Checkout</Link>
                         </div>
                     </div>
                 </>

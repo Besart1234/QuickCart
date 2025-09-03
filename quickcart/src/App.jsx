@@ -13,6 +13,7 @@ import CategoryList from "./pages/dashboard/category/CategoryList"
 import CategoryForm from "./pages/dashboard/category/CategoryForm"
 import ProductList from "./pages/dashboard/product/ProductList"
 import ProductForm from "./pages/dashboard/product/ProductForm"
+import CheckoutPage from "./pages/order/CheckoutPage"
 
 function App() {
 	return (
@@ -27,6 +28,8 @@ function App() {
 				<Route path="wishlist" element={<Wishlist />} />
 
 				<Route path="products/:id" element={<ProductDetails />}/>
+
+				<Route path="/checkout" element={<CheckoutPage />} />
 			</Route>
 
 			{/* Admin area with full-width layout */}

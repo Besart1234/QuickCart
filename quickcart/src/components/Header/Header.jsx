@@ -31,7 +31,7 @@ function Header(){
                         ) : (
                             <>
                                 {/* Cart link */}
-                                <Nav.Link as={Link} to='/cart' className="d-flex align-items-center">
+                                <Nav.Link as={Link} to='/cart' className="d-flex align-items-center cart-link">
                                     <FaShoppingCart />
                                     <span className="ms-1">Cart ({cartCount})</span>
                                 </Nav.Link>

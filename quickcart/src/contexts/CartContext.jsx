@@ -10,24 +10,36 @@ function CartProvider({ children }) {
     const { user } = useContext(AuthContext); //get user from auth
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [loaded, setLoaded] = useState(false);
 
-    const fetchCart = async () => {
-        if(!user) return;
+    const fetchCart = useCallback(async () => {
+        if(!user) {
+            setItems([]);
+            setLoading(false);
+            setLoaded(true);
+            return;
+        }
 
         try {
             setLoading(true); // start loading
             const res = await authFetch(`${API_URL}/cart`);
 
-            if(!res.ok) return;
-                
+            if(!res.ok) {
+                setItems([]);
+                console.error('fetchCart response not ok', res.status);
+                return;
+            }
+
             const data = await res.json();
             setItems(data.items ?? []);
         } catch (error) {
             console.error("Failed to load cart", error);
+            setItems([]);
         } finally {
             setLoading(false);
+            setLoaded(true);
         }
-    };
+    }, [user]);
 
     //Add to cart -> refresh cart after success
     const addToCart = async (productId, quantity = 1) => {
@@ -87,8 +99,11 @@ function CartProvider({ children }) {
     // React to user changes
     useEffect(() => {
         if(user) fetchCart(); // logged in → fetch cart
-        else setItems([]); // logged out → clear cart 
-    }, [user]);
+        else {
+            setItems([]); // logged out → clear cart 
+            setLoading(false);
+        }
+    }, [user, fetchCart]);
 
     const cartCount = items.reduce((sum, item) => sum + item.quantity, 0);
     const subtotal = items.reduce((sum, item) => sum + item.quantity * item.currentPrice, 0);
@@ -98,7 +113,8 @@ function CartProvider({ children }) {
             cartCount, 
             subtotal, 
             items, 
-            loading, 
+            loading,
+            loaded, 
             fetchCart, 
             addToCart, 
             increaseQuantity, 
