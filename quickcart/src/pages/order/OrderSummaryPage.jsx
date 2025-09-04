@@ -83,9 +83,11 @@ function OrderSummaryPage() {
                 <Link to="/" className="btn btn-primary">
                     Go to Home
                 </Link>
-                <Link to="/profile/orders" className="btn btn-outline-secondary">
+                {!location.state?.fromProfile && (
+                    <Link to="/profile/orders" className="btn btn-outline-secondary">
                     View My Orders
                 </Link>
+                )} 
             </div>
         </Container>
     );

@@ -36,5 +36,9 @@ namespace QuickCart.API.Models
         public ApplicationUser User { get; set; } = null!;
 
         public ICollection<OrderItem> OrderItems { get; set; } = new List<OrderItem>();
+
+        public string? PaymentIntentId { get; set; }
+        public string? PaymentStatus { get; set; }
+        public string? PaymentMethod { get; set; }
     }
 }

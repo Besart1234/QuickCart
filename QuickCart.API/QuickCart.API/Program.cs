@@ -9,6 +9,7 @@ using QuickCart.API.Models;
 using QuickCart.API.Services;
 using QuickCart.API.Settings;
 using System.Text;
+using Stripe;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -128,6 +129,9 @@ builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// Add Stripe configuration
+StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
 
 var app = builder.Build();

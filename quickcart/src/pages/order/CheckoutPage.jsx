@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import { authFetch } from "../../utils/AuthFetch";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button, Card, Col, Container, Form, Row } from "react-bootstrap";
+import CheckoutForm from "./CheckoutForm";
 
 const API_URL = "https://localhost:7000/api";
 
@@ -21,6 +22,8 @@ function CheckoutPage() {
     const [placingOrder, setPlacingOrder] = useState(false);
     const navigate = useNavigate();
     const [orderPlaced, setOrderPlaced] = useState(false);
+
+    const [paymentData, setPaymentData] = useState(null);
 
     useEffect(() => {
         if(user) fetchCart();
@@ -67,11 +70,25 @@ function CheckoutPage() {
 
             if(res.ok) {
                 const created = await res.json();
-                toast.success('Order placed successfully');
+                //toast.success('Order placed successfully');
                 setOrderPlaced(true);
-                await clearCart();
+                
 
-                navigate(`/orders/${created.id}`, { state: { fromCheckout: true } });
+                // Call backend to create PaymentIntent
+                const paymentRes = await authFetch(`${API_URL}/order/${created.id}/create-payment-intent`, {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+
+                if(paymentRes.ok) {
+                    const { clientSecret } = await paymentRes.json();
+                    setPaymentData({ clientSecret, orderId: created.id });
+                }
+                else {
+                    toast.error('Failed to initialize payment');
+                }
+
+                //navigate(`/orders/${created.id}`, { state: { fromCheckout: true } });
             }
             else {
                 const err = await res.text();
@@ -143,6 +160,16 @@ function CheckoutPage() {
                     {placingOrder ? 'Placing Order...' : 'Place Order'}
                 </Button>
             </div>
+
+            {paymentData && (
+                <Card className="mt-4 p-3">
+                    <h5>Payment</h5>
+                    <CheckoutForm 
+                        clientSecret={paymentData.clientSecret}
+                        orderId={paymentData.orderId}
+                    />
+                </Card>
+            )}
         </Container>
     );
 }

@@ -6,6 +6,7 @@ using QuickCart.API.Data;
 using QuickCart.API.Dtos.Order;
 using QuickCart.API.Dtos.OrderItem;
 using QuickCart.API.Models;
+using Stripe;
 using System.Security.Claims;
 
 namespace QuickCart.API.Controllers
@@ -349,6 +350,51 @@ namespace QuickCart.API.Controllers
             order.TotalPrice = order.OrderItems
                 .Where(oi => oi.Id != itemId)//Exclude the one we're about to delete
                 .Sum(oi => oi.PriceAtPurchase * oi.Quantity);
+
+            await _context.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        [HttpPost("{orderId}/create-payment-intent")]
+        public async Task<IActionResult> CreatePaymentIntent(int orderId)
+        {
+            var order = await _context.Order
+                .FirstOrDefaultAsync(o => o.Id == orderId);
+
+            if (order == null) return NotFound();
+
+            var amount = order.TotalPrice;
+
+            if (amount < 0.5m) // Stripe requires at least $0.50 for USD
+                return BadRequest("Order total must be at least $0.50 for payment.");
+            
+
+            var service = new PaymentIntentService();
+            var paymentIntent = await service
+                .CreateAsync(new PaymentIntentCreateOptions
+            {
+                    Amount = (long)(amount * 100),// convert dollars to cents
+                    Currency = "usd",
+                    PaymentMethodTypes = new List<string> { "card" }
+                });
+
+            order.PaymentIntentId = paymentIntent.Id;
+            order.PaymentStatus = paymentIntent.Status;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new { clientSecret = paymentIntent.ClientSecret });
+        }
+
+        [HttpPatch("{orderId}/mark-paid")]
+        public async Task<IActionResult> MarkOrderAsPaid(int orderId)
+        {
+            var order = await _context.Order.FindAsync(orderId);
+            if (order == null) return NotFound();
+
+            order.PaymentStatus = "Paid";
+            order.Status = "Confirmed";
 
             await _context.SaveChangesAsync();
 

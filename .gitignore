@@ -41,3 +41,6 @@ appsettings.*.json
 
 # Ignore product images
 QuickCart.API/QuickCart.API/wwwroot/images/products/
+
+# Ignore the .env file in the react app subfolder
+quickcart/.env

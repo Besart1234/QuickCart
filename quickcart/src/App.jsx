@@ -16,6 +16,11 @@ import ProductForm from "./pages/dashboard/product/ProductForm"
 import CheckoutPage from "./pages/order/CheckoutPage"
 import OrderSummaryPage from "./pages/order/OrderSummaryPage"
 
+import { Elements } from "@stripe/react-stripe-js"
+import { loadStripe } from "@stripe/stripe-js"
+
+const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
+
 function App() {
 	return (
 		<Routes>
@@ -30,7 +35,14 @@ function App() {
 
 				<Route path="products/:id" element={<ProductDetails />}/>
 
-				<Route path="/checkout" element={<CheckoutPage />} />
+				<Route 
+					path="/checkout" 
+					element={
+						<Elements stripe={stripePromise}>
+							<CheckoutPage />
+						</Elements>	
+					} 
+				/>
 				<Route path="/orders/:orderId" element={<OrderSummaryPage />} />
 			</Route>
 
