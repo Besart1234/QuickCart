@@ -40,16 +40,24 @@ function CheckoutForm({ clientSecret, orderId }){
 
             if(paymentIntent.status === 'succeeded') {
                 // Update backend order status
-                await authFetch(`${API_URL}/order/${orderId}/mark-paid`, {
+                const patchRes = await authFetch(`${API_URL}/order/${orderId}/mark-paid`, {
                     method: 'PATCH',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(paymentIntent.payment_method)
                 });
 
+                if(!patchRes.ok) {
+                    setErrorMsg('Failed to confirm payment with backend');
+                    setLoading(false);
+                    return;
+                }
+
+                const updatedOrder = await patchRes.json(); // <-- This now has PaymentStatus = Paid
+
                 toast.success('Order placed successfully');
                 await clearCart();
                 // Navigate to order summary
-                navigate(`/orders/${orderId}`, { state: { fromCheckout: true } });
+                navigate(`/orders/${orderId}`, { state: { fromCheckout: true, order: updatedOrder } });
             }
             else {
                 setErrorMsg('Payment did not succeed. Please try again.');

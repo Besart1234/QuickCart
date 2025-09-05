@@ -9,8 +9,8 @@ const API_URL = "https://localhost:7000/api";
 function OrderSummaryPage() {
     const { user, loading: authLoading } = useContext(AuthContext);
     const { orderId } = useParams();
-    const [order, setOrder] = useState(null);
     const location = useLocation();
+    const [order, setOrder] = useState(location.state?.order || null);
 
     const fetchOrder = async () => {
         try {
@@ -25,8 +25,8 @@ function OrderSummaryPage() {
     };
 
     useEffect(() => {
-        if(user) fetchOrder();
-    }, [user, orderId]);
+        if(!order && user) fetchOrder();
+    }, [user, orderId, order]);
 
     if(authLoading) return null;
     if(!user) return <Navigate to='/login' replace />;
@@ -45,20 +45,54 @@ function OrderSummaryPage() {
                     </p>
                 </>
             ) : (
-                <>
-                    <h1 className="h4 mb-3">Order Details</h1>
-                    <p>
-                        <strong>Status:</strong>{" "}
-                        <Badge bg={getStatusStyle(order.status)}>{order.status}</Badge> 
-                    </p>
-                </>
+                <h1 className="h4 mb-3">Order Details</h1>
             )}
 
+            <Card className="mb-4">
+                <Card.Body>
+                    <Row>
+                        <Col md={6} className="d-flex align-items-center">
+                            <div>
+                                <strong>Order date: </strong>
+                                {new Date(order.createdAt).toLocaleString()}
+                            </div>
+                        </Col>
+                        <Col md={3} className="d-flex align-items-center">
+                            <div>
+                                <strong>Order status: </strong>
+                                <Badge bg={getStatusStyle(order.status)}>{order.status}</Badge>
+                            </div>
+                        </Col>
+                        <Col md={3} className="d-flex align-items-center">
+                            <div>
+                                <strong>Payment: </strong>
+                                <Badge bg={
+                                    order.paymentStatus === 'Paid'
+                                    ? 'success' 
+                                    : order.paymentStatus === 'Failed'
+                                    ? 'danger'
+                                    : 'secondary'
+                                }>
+                                    {order.paymentStatus || 'Pending'}
+                                </Badge>
+                            </div>
+                        </Col>
+                    </Row>
+                </Card.Body>
+            </Card>
+
             <h5 className="mt-4">Shipping Address:</h5>
-            <p>
-                {order.shippingStreet}, {order.shippingCity}, <br />
-                {order.shippingState}, {order.shippingCountry}, {order.shippingPostalCode}
-            </p>
+            <Card className="mb-4">
+                <Card.Body>
+                    <p className="mb-1">{order.shippingStreet}</p>
+                    <p className="mb-1">
+                        {order.shippingCity}, {order.shippingState}
+                    </p>
+                    <p className="mb-0">
+                        {order.shippingCountry}, {order.shippingPostalCode}
+                    </p>
+                </Card.Body>
+            </Card>
 
             <h5>Order Items:</h5>
             {order.orderItems.map(item => (
