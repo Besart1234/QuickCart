@@ -29,13 +29,14 @@ namespace QuickCart.API.Controllers
         {
             var orders = await _context.Order
                 .Select(o => new OrderResponseDto
-            {
-                Id = o.Id,
-                UserId = o.UserId,
-                CreatedAt = o.CreatedAt,
-                TotalPrice = o.TotalPrice,
-                Status = o.Status
-            })
+                {
+                    Id = o.Id,
+                    UserId = o.UserId,
+                    CreatedAt = o.CreatedAt,
+                    TotalPrice = o.TotalPrice,
+                    Status = o.Status,
+                    PaymentStatus = o.PaymentStatus
+                })
              .ToListAsync();
 
             return Ok(orders);
@@ -72,7 +73,10 @@ namespace QuickCart.API.Controllers
                     PriceAtPurchase = oi.PriceAtPurchase,
                     Quantity = oi.Quantity
                 })
-                .ToList()
+                .ToList(),
+                PaymentIntentId = order.PaymentIntentId,
+                PaymentStatus = order.PaymentStatus,
+                PaymentMethod = order.PaymentMethod
             };
 
             return Ok(result);
@@ -388,13 +392,15 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpPatch("{orderId}/mark-paid")]
-        public async Task<IActionResult> MarkOrderAsPaid(int orderId)
+        public async Task<IActionResult> 
+            MarkOrderAsPaid(int orderId, [FromBody] string paymentMethodId)
         {
             var order = await _context.Order.FindAsync(orderId);
             if (order == null) return NotFound();
 
             order.PaymentStatus = "Paid";
             order.Status = "Confirmed";
+            order.PaymentMethod = paymentMethodId;
 
             await _context.SaveChangesAsync();
 

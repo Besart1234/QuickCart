@@ -42,7 +42,8 @@ function CheckoutForm({ clientSecret, orderId }){
                 // Update backend order status
                 await authFetch(`${API_URL}/order/${orderId}/mark-paid`, {
                     method: 'PATCH',
-                    headers: { 'Content-Type': 'application/json' }
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(paymentIntent.payment_method)
                 });
 
                 toast.success('Order placed successfully');

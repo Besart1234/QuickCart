@@ -17,5 +17,9 @@ namespace QuickCart.API.Dtos.Order
         public string ShippingPostalCode { get; set; } = string.Empty;
 
         public List<OrderItemResponseDto> OrderItems { get; set; } = new();
+
+        public string? PaymentIntentId { get; set; }
+        public string? PaymentStatus { get; set; }
+        public string? PaymentMethod { get; set; }
     }
 }

@@ -155,10 +155,14 @@ function CheckoutPage() {
             <hr />
             <p className="h5">Total: ${total.toFixed(2)}</p>
             <div className="d-flex gap-2 mt-3">
-                <Button variant="secondary" onClick={() => navigate('/cart')}>Back to Cart</Button>
-                <Button variant="success" onClick={handlePlaceOrder} disabled={placingOrder}>
-                    {placingOrder ? 'Placing Order...' : 'Place Order'}
-                </Button>
+                {!paymentData && (
+                    <>
+                        <Button variant="secondary" onClick={() => navigate('/cart')}>Back to Cart</Button>
+                        <Button variant="success" onClick={handlePlaceOrder} disabled={placingOrder}>
+                            {placingOrder ? 'Placing Order...' : 'Place Order'}
+                        </Button>
+                    </>
+                )}     
             </div>
 
             {paymentData && (
