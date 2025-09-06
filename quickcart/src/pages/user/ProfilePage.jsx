@@ -4,7 +4,8 @@ import { AuthContext } from "../../contexts/AuthContext";
 import ProfileInfo from "../../components/user/ProfileInfo";
 import EditProfileForm from "../../components/user/EditProfileForm";
 import { Navigate } from "react-router-dom";
-import ChangePasswordForm from "../../components/user/ChangePasswrodForm";
+import ChangePasswordForm from "../../components/user/ChangePasswordForm";
+import AddressList from "../../components/user/AddressList";
 
 function ProfilePage() {
     const { user, loading, fetchUser } = useContext(AuthContext);
@@ -40,6 +41,12 @@ function ProfilePage() {
                     onCancel={() => setChangingPassword(false)}
                 />
             )}
+
+            <hr />
+
+            <AddressList
+                user={user}
+            />
         </Container>
     );
 }

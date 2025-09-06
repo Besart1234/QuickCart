@@ -12,6 +12,9 @@ const API_URL = "https://localhost:7000/api";
 function CheckoutPage() {
     const { user, loading: authLoading } = useContext(AuthContext);
     const { fetchCart, items: cartItems, clearCart, loading: cartLoading, total, loaded: cartLoaded } = useContext(CartContext);
+    const [savedAddresses, setSavedAddresses] = useState([]);
+    const [selectedAddressId, setSelectedAddressId] = useState(null);
+    const [useCustom, setUseCustom] = useState(false);
     const [customAddress, setCustomAddress] = useState({
         street: '',
         city: '',
@@ -27,7 +30,17 @@ function CheckoutPage() {
 
     useEffect(() => {
         if(user) fetchCart();
+
+        authFetch(`${API_URL}/user/${user.id}/addresses`)
+            .then(res => res.json())
+            .then(data => setSavedAddresses(data))
+            .catch(e => console.error(e));
     }, [user, fetchCart]);
+
+    const handleAddressChange = (e) => {
+        setSelectedAddressId(parseInt(e.target.value));
+        setUseCustom(false);
+    };
 
     const handleCustomAddressChange = (e) => {
         const { name, value } = e.target;
@@ -35,13 +48,15 @@ function CheckoutPage() {
             ...prev,
             [name]: value
         }));
+        setUseCustom(true);
+        setSelectedAddressId(null);
     };
 
     const handlePlaceOrder = async () => {
         if(placingOrder) return;
         setPlacingOrder(true);
 
-        const shipping = customAddress;
+        const shipping = useCustom ? customAddress : savedAddresses.find(a => a.id === selectedAddressId);
         if(!shipping.street || !shipping.city || !shipping.state || !shipping.country || !shipping.postalCode) {
             toast.error('Please enter a valid address and ensure your cart is not empty');
             setPlacingOrder(false);
@@ -116,10 +131,25 @@ function CheckoutPage() {
         <Container className="py-4">
             <h1 className="h3 mb-4">Checkout</h1>
 
+            <h5>Shipping Address</h5>
+            {savedAddresses.map(address => (
+                <Card key={address.id} className="mb-2">
+                    <Card.Body>
+                        <Form.Check 
+                            type="radio"
+                            label={`${address.street}, ${address.city}, ${address.state}, ${address.country}, ${address.postalCode}`}
+                            value={address.id}
+                            checked={selectedAddressId === address.id}
+                            onChange={handleAddressChange}
+                        />
+                    </Card.Body>
+                </Card>
+            ))}
+
             <Card className="mb-3">
                 <Card.Body>
                     <Form.Label>
-                        <strong>Enter the shipping address</strong>
+                        <strong>{savedAddresses.length > 0 ? 'Or enter a custom address:' : 'Enter the shipping address:'}</strong>
                     </Form.Label>
                     <Row className="g-2">
                         {['street', 'city', 'state', 'country', 'postalCode'].map(field => (
