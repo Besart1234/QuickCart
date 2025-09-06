@@ -18,6 +18,7 @@ import OrderSummaryPage from "./pages/order/OrderSummaryPage"
 
 import { Elements } from "@stripe/react-stripe-js"
 import { loadStripe } from "@stripe/stripe-js"
+import ProfilePage from "./pages/user/ProfilePage"
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -44,6 +45,8 @@ function App() {
 					} 
 				/>
 				<Route path="/orders/:orderId" element={<OrderSummaryPage />} />
+
+				<Route path='/profile' element={<ProfilePage />} />
 			</Route>
 
 			{/* Admin area with full-width layout */}

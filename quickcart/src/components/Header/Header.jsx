@@ -49,6 +49,7 @@ function Header(){
                                 >
                                     <NavDropdown.Item as={Link} to="/cart">Cart</NavDropdown.Item>
                                     <NavDropdown.Item as={Link} to="/wishlist">Wishlist</NavDropdown.Item>
+                                    <NavDropdown.Item as={Link} to="/profile">Profile</NavDropdown.Item>
                                     {user.roles.includes('Admin') && (
                                         <NavDropdown.Item as={Link} to="/dashboard">Dashboard</NavDropdown.Item>
                                     )}
