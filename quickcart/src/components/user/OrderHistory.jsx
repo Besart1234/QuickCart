@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { authFetch } from "../../utils/AuthFetch";
 import { Badge, Button, Card } from "react-bootstrap";
 import { getStatusStyle } from "../../pages/order/OrderSummaryPage";
@@ -9,6 +9,7 @@ const API_URL = "https://localhost:7000/api";
 function OrderHistory({ user }) {
     const [orders, setOrders] = useState([]);
     const navigate = useNavigate();
+    const location = useLocation();
 
     const fetchOrders = async () => {
         try {
@@ -39,7 +40,7 @@ function OrderHistory({ user }) {
 
     return (
         <div className="mt-5">
-            <h5 className="mb-3">Order History</h5>
+            <h5 className="mb-3" id="order-history">Order History</h5>
             {orders.length === 0 ? (
                 <p>No orders yet.</p>
             ) : (
@@ -47,7 +48,6 @@ function OrderHistory({ user }) {
                     <Card 
                         key={order.id} 
                         className="mb-3"
-                        id={index === 0 ? "order-history" : undefined} // add id to first order, to enable scrolling when coming from the checkout process
                     >
                         <Card.Body>
                             <Card.Title>Order placed on {new Date(order.createdAt).toLocaleString()}</Card.Title>

@@ -48,6 +48,9 @@ function ProductList() {
                 const data = await res.json();
                 setProducts(data.products);
                 setTotalPages(data.totalPages);
+
+                // Scroll to top after new data loads
+                window.scrollTo({ top: 0, behavior: 'instant' });
             }
             else {
                 console.error('Failed to load products');
@@ -120,15 +123,13 @@ function ProductList() {
                 </table>
             </div>
 
-            {showModal && (
-                <ConfirmationModal 
-                    show={showModal}
-                    title='Confirm deletion'
-                    message={`Are you sure you want to delete product "${selectedProduct?.name}"?`}
-                    onCancel={() => setShowModal(false)}
-                    onConfirm={handleDeleteProduct}
-                />
-            )}
+            <ConfirmationModal 
+                show={showModal}
+                title='Confirm deletion'
+                message={`Are you sure you want to delete product "${selectedProduct?.name}"?`}
+                onCancel={() => setShowModal(false)}
+                onConfirm={handleDeleteProduct}
+            />
 
             <div className="d-flex justify-content-between align-items-center mt-auto pt-3">
                 <button className="btn btn-secondary" onClick={() => goToPage(pageParam - 1)} disabled={pageParam === 1}>

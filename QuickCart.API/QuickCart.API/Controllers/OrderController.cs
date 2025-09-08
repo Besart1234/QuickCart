@@ -25,21 +25,46 @@ namespace QuickCart.API.Controllers
 
         [HttpGet]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<IEnumerable<OrderResponseDto>>> GetOrders()
+        public async Task<ActionResult<IEnumerable<OrderResponseDto>>> 
+            GetOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
         {
-            var orders = await _context.Order
+            var query = _context.Order
+                .Include(o => o.User)
+                .AsQueryable();
+
+            // --- pagination ---
+            var totalOrders = await _context.Order.CountAsync();
+            var totalPages = (int)Math.Ceiling((double)totalOrders / pageSize);
+
+            if (totalPages == 0) totalPages = 1; // safety: at least 1 page
+            if (page > totalPages) page = totalPages;
+            if (page < 1) page = 1;
+
+            var orders = await query
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            var orderDtos = orders
                 .Select(o => new OrderResponseDto
                 {
                     Id = o.Id,
                     UserId = o.UserId,
+                    FirstName = o.User.FirstName ?? string.Empty,
+                    LastName = o.User.LastName ?? string.Empty,
                     CreatedAt = o.CreatedAt,
                     TotalPrice = o.TotalPrice,
                     Status = o.Status,
                     PaymentStatus = o.PaymentStatus
-                })
-             .ToListAsync();
+                }).ToList();
 
-            return Ok(orders);
+            return Ok(new
+            {
+                TotalOrders = totalOrders,
+                TotalPages = totalPages,
+                CurrentPage = page,
+                Orders = orderDtos
+            });
         }
 
         [HttpGet("{id}")]
