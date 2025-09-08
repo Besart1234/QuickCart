@@ -85,9 +85,7 @@ function CheckoutPage() {
 
             if(res.ok) {
                 const created = await res.json();
-                //toast.success('Order placed successfully');
-                setOrderPlaced(true);
-                
+                setOrderPlaced(true);         
 
                 // Call backend to create PaymentIntent
                 const paymentRes = await authFetch(`${API_URL}/order/${created.id}/create-payment-intent`, {
@@ -102,8 +100,6 @@ function CheckoutPage() {
                 else {
                     toast.error('Failed to initialize payment');
                 }
-
-                //navigate(`/orders/${created.id}`, { state: { fromCheckout: true } });
             }
             else {
                 const err = await res.text();

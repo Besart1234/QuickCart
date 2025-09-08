@@ -298,13 +298,15 @@ namespace QuickCart.API.Controllers
 
             var orders = await _context.Order
                 .Where(o => o.UserId == userId)
+                .OrderByDescending(o => o.CreatedAt)
                 .Select(o => new OrderResponseDto
                 {
                     Id = o.Id,
                     UserId = o.UserId,
                     CreatedAt = o.CreatedAt,
                     TotalPrice = o.TotalPrice,
-                    Status = o.Status
+                    Status = o.Status,
+                    PaymentStatus = o.PaymentStatus
                 })
                 .ToListAsync();
 
@@ -344,8 +346,10 @@ namespace QuickCart.API.Controllers
                     ProductName = oi.Product.Name,
                     PriceAtPurchase = oi.PriceAtPurchase,
                     Quantity = oi.Quantity
-                })
-                .ToList()
+                }).ToList(),
+                PaymentIntentId = order.PaymentIntentId,
+                PaymentStatus = order.PaymentStatus,
+                PaymentMethod = order.PaymentMethod
             };
 
             return Ok(result);

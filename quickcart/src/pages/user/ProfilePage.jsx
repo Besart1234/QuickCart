@@ -1,16 +1,25 @@
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Container } from "react-bootstrap";
 import { AuthContext } from "../../contexts/AuthContext";
 import ProfileInfo from "../../components/user/ProfileInfo";
 import EditProfileForm from "../../components/user/EditProfileForm";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import ChangePasswordForm from "../../components/user/ChangePasswordForm";
 import AddressList from "../../components/user/AddressList";
+import OrderHistory from "../../components/user/OrderHistory";
 
 function ProfilePage() {
     const { user, loading, fetchUser } = useContext(AuthContext);
     const [editing, setEditing] = useState(false);
     const [changingPassword, setChangingPassword] = useState(false);
+    // const location = useLocation();
+
+    // useEffect(() => {
+    //     if(location.hash) {
+    //         const element = document.querySelector(location.hash);
+    //         if(element) element.scrollIntoView({ behavior: 'smooth', block: 'start'  })
+    //     }
+    // }, [location]);
 
     if(loading) return null;
     if(!user) return <Navigate to='/login' replace/>
@@ -44,9 +53,11 @@ function ProfilePage() {
 
             <hr />
 
-            <AddressList
-                user={user}
-            />
+            <AddressList user={user} />
+
+            <hr />
+
+            <OrderHistory user={user} />
         </Container>
     );
 }

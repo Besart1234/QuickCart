@@ -57,7 +57,7 @@ function CheckoutForm({ clientSecret, orderId }){
                 toast.success('Order placed successfully');
                 await clearCart();
                 // Navigate to order summary
-                navigate(`/orders/${orderId}`, { state: { fromCheckout: true, order: updatedOrder } });
+                navigate(`/orders/${orderId}`, { state: { fromCheckout: true } });
             }
             else {
                 setErrorMsg('Payment did not succeed. Please try again.');

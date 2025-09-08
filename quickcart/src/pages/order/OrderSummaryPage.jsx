@@ -10,7 +10,7 @@ function OrderSummaryPage() {
     const { user, loading: authLoading } = useContext(AuthContext);
     const { orderId } = useParams();
     const location = useLocation();
-    const [order, setOrder] = useState(location.state?.order || null);
+    const [order, setOrder] = useState(null);
 
     const fetchOrder = async () => {
         try {
@@ -33,7 +33,7 @@ function OrderSummaryPage() {
 
     if(!order) return <p>Loading order...</p>;
 
-    if(!location.state?.fromCheckout) return <Navigate to='/' replace />
+    if(!location.state?.fromCheckout && !location.state?.fromProfile) return <Navigate to='/' replace />
 
     return (
         <Container className="py-4">
@@ -113,16 +113,16 @@ function OrderSummaryPage() {
             <hr />
             <p className="h5">Total: ${order.totalPrice.toFixed(2)}</p>
 
-            <div className="d-flex gap-2 mt-4">
-                <Link to="/" className="btn btn-primary">
-                    Go to Home
-                </Link>
-                {!location.state?.fromProfile && (
-                    <Link to="/profile/orders" className="btn btn-outline-secondary">
-                    View My Orders
-                </Link>
-                )} 
-            </div>
+            {!location.state?.fromProfile && (
+                <div className="d-flex gap-2 mt-4">
+                    <Link to="/" className="btn btn-primary">
+                        Go to Home
+                    </Link>
+                    <Link to="/profile#order-history" className="btn btn-outline-secondary">
+                        View My Orders
+                    </Link>
+                </div>
+            )}
         </Container>
     );
 }
