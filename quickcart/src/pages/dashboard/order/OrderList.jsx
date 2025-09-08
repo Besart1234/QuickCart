@@ -21,37 +21,35 @@ function OrderList() {
         fetchOrders(pageParam);
     }, [pageParam]);
 
-    // Validate page number after we know totalPages
-    useEffect(() => {
-        if(totalPages > 0) {
-            if(pageParam > totalPages) {
-                setSearchParams(prev => {
-                    const params = new URLSearchParams(prev);
-                    params.set('page', totalPages);
-                    return params;
-                }, { replace: true });
-            }
-            if(pageParam < 1) {
-                setSearchParams(prev => {
-                    const params = new URLSearchParams(prev);
-                    params.set('page', 1);
-                    return params;
-                }, { replace: true });
-            }
-        }
-    }, [pageParam, totalPages]);
-
     const fetchOrders = async (currentPage = 1) => {
         try {
             const res = await authFetch(`${API_URL}/order?page=${currentPage}&pageSize=${PAGE_SIZE}`);
 
             if(res.ok) {
                 const data = await res.json();
-                setOrders(data.orders);
-                setTotalPages(data.totalPages);
 
-                // Scroll to top after new data loads
-                window.scrollTo({ top: 0, behavior: 'instant' });
+                // Validate page number after we know totalPages
+                const totalPagesFromAPI = data.totalPages;
+
+                let validPage = currentPage;
+
+                if(currentPage > totalPagesFromAPI) validPage = totalPagesFromAPI;
+                if(currentPage < 1) validPage = 1;
+
+                if(validPage !== currentPage) {
+                    setSearchParams(prev => {
+                        const params = new URLSearchParams(prev);
+                        params.set('page', validPage);
+                        return params;
+                    }, { replace: true });
+                }
+                else {
+                    setOrders(data.orders);
+                    setTotalPages(data.totalPages);
+
+                    // Scroll to top after new data loads
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+                }
             }
         } catch (error) {
             console.error('Failed to fetch orders', error);

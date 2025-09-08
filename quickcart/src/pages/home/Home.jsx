@@ -41,16 +41,29 @@ function Home() {
 
         try {
             const res = await fetch(url);
+            if(!res.ok) throw new Error('Failed to fetch products');
 
-            if(res.ok) {
-                const data = await res.json();
+            const data = await res.json();
+            // Validate page number after we know totalPages
+            const totalPagesFromAPI = data.totalPages;
+
+            let validPage = page;
+            if(validPage > totalPagesFromAPI) validPage = totalPagesFromAPI;
+            if(validPage < 1) validPage = 1;
+
+            if(validPage !== page) {
+                setSearchParams(prev => {
+                    const params = new URLSearchParams(prev);
+                    params.set('page', validPage);
+                    return params;
+                }, { replace: true });
+            }
+            else {
                 setProducts(data.products);
                 setTotalPages(data.totalPages);
                 setLoading(false);
             }
-            else {
-                toast.error('Could not fetch products');
-            }
+
         } catch (error) {
             console.error(error);
             toast.error('An error occurred while fetching products');
@@ -62,23 +75,23 @@ function Home() {
         window.scrollTo(0, 0); //scroll to top on new search
     }, [searchQuery, categoryId, priceParam, pageParam]);
 
-    useEffect(() => {
-        // once products are loaded and we know totalPages, validate page
-        if(totalPages > 0 && pageParam > totalPages) {
-            setSearchParams(prev => {
-                const params = new URLSearchParams(prev);
-                params.set('page', totalPages);
-                return params;
-            }, { replace: true }); // replace so user’s history isn’t spammed
-        }
-        if(pageParam < 1) {
-            setSearchParams(prev => {
-                const params = new URLSearchParams(prev);
-                params.set('page', 1);
-                return params;
-            }, { replace: true });
-        }
-    }, [totalPages, pageParam]);
+    // useEffect(() => {
+    //     // once products are loaded and we know totalPages, validate page
+    //     if(totalPages > 0 && pageParam > totalPages) {
+    //         setSearchParams(prev => {
+    //             const params = new URLSearchParams(prev);
+    //             params.set('page', totalPages);
+    //             return params;
+    //         }, { replace: true }); // replace so user’s history isn’t spammed
+    //     }
+    //     if(pageParam < 1) {
+    //         setSearchParams(prev => {
+    //             const params = new URLSearchParams(prev);
+    //             params.set('page', 1);
+    //             return params;
+    //         }, { replace: true });
+    //     }
+    // }, [totalPages, pageParam]);
 
     const handleNextPage = () => {
         if(pageParam < totalPages) {

@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import { Link, useSearchParams } from "react-router-dom";
 
 const API_URL = 'https://localhost:7000/api';
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 function ProductList() {
     const [products, setProducts] = useState([]);
@@ -20,37 +20,35 @@ function ProductList() {
         fetchProducts(pageParam);
     }, [pageParam]);
 
-    // Validate page number after we know totalPages
-    useEffect(() => {
-        if(totalPages > 0) {
-            if(pageParam > totalPages) {
-                setSearchParams(prev => {
-                    const params = new URLSearchParams(prev);
-                    params.set('page', totalPages);
-                    return params;
-                }, { replace: true });
-            }
-            if(pageParam < 1) {
-                setSearchParams(prev => {
-                    const params = new URLSearchParams(prev);
-                    params.set('page', 1);
-                    return params;
-                }, { replace: true });
-            }
-        }
-    }, [pageParam, totalPages]);
-
     const fetchProducts = async (currentPage = 1) => {
         try {
-            const res = await authFetch(`${API_URL}/product/?page=${currentPage}&pageSize=${PAGE_SIZE}`, { credentials: 'include' });
+            const res = await authFetch(`${API_URL}/product/?page=${currentPage}&pageSize=${PAGE_SIZE}`);
 
             if(res.ok) {
                 const data = await res.json();
-                setProducts(data.products);
-                setTotalPages(data.totalPages);
 
-                // Scroll to top after new data loads
-                window.scrollTo({ top: 0, behavior: 'instant' });
+                // Validate page number after we know totalPages
+                const totalPagesFromAPI = data.totalPages;
+
+                let validPage = currentPage;
+
+                if(currentPage > totalPagesFromAPI) validPage = totalPagesFromAPI;
+                if(currentPage < 1) validPage = 1;
+
+                if(validPage !== currentPage) {
+                    setSearchParams(prev => {
+                        const params = new URLSearchParams(prev);
+                        params.set('page', validPage);
+                        return params;
+                    }, { replace: true });
+                }
+                else {
+                    setProducts(data.products);
+                    setTotalPages(data.totalPages);
+
+                    // Scroll to top after new data loads
+                    window.scrollTo({ top: 0, behavior: 'instant' });
+                }    
             }
             else {
                 console.error('Failed to load products');
