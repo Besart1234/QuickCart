@@ -9,6 +9,7 @@ import ConfirmationModal from "../../components/ConfirmationModal";
 import { CartContext } from "../../contexts/CartContext";
 import { AuthContext } from "../../contexts/AuthContext";
 import { toast } from "react-toastify";
+import { WishlistContext } from "../../contexts/WishlistContext";
 
 const API_URL = 'https://localhost:7000/api';
 const IMG_URL = "https://localhost:7000";
@@ -22,6 +23,7 @@ function ProductDetails() {
 
     const { addToCart } = useContext(CartContext);
     const { user } = useContext(AuthContext);
+    const { addToWishlist } = useContext(WishlistContext);
 
     useEffect(() => {
         fetch(`${API_URL}/product/${id}`)
@@ -238,7 +240,13 @@ function ProductDetails() {
                         >
                             Add to Cart
                         </Button>
-                        <Button variant="outline-secondary" disabled={!user}>Add to Wishlist</Button>
+                        <Button 
+                            variant="outline-secondary" 
+                            disabled={!user}
+                            onClick={() => addToWishlist(product.id)}
+                        >
+                            Add to Wishlist
+                        </Button>
                     </div>
                 </Col>
             </Row>

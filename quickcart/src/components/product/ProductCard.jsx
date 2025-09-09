@@ -6,6 +6,7 @@ import { useContext } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import { CartContext } from "../../contexts/CartContext";
 import { toast } from "react-toastify";
+import { WishlistContext } from "../../contexts/WishlistContext";
 
 const IMG_URL = 'https://localhost:7000';
 const API_URL = 'https://localhost:7000/api';
@@ -13,6 +14,7 @@ const API_URL = 'https://localhost:7000/api';
 function ProductCard({ product }) {
     const { user } = useContext(AuthContext);
     const { addToCart } = useContext(CartContext);
+    const { addToWishlist } = useContext(WishlistContext);
 
     const handleAddToCart = async () => {
         if(!user) return;
@@ -53,7 +55,8 @@ function ProductCard({ product }) {
                             placement='top'
                             overlay={<Tooltip>Add to Wishlist</Tooltip>}
                         >
-                            <Button 
+                            <Button
+                                onClick={() => addToWishlist(product.id)} 
                                 disabled={!user}
                                 variant='light' 
                                 className='icon-button'
