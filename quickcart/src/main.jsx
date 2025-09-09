@@ -6,25 +6,28 @@ import { BrowserRouter } from 'react-router-dom'
 import AuthProvider from './contexts/AuthContext.jsx'
 import { ToastContainer } from "react-toastify"
 import CartProvider from './contexts/CartContext.jsx'
+import WishlistProvider from './contexts/WishlistContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <CartProvider>
-          <App />
-          <ToastContainer 
-            position='top-center'
-            autoClose={2000}
-            hideProgressBar={false}
-            newestOnTop={false}
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-            theme='light'
-          />
+          <WishlistProvider>
+            <App />
+            <ToastContainer 
+              position='top-center'
+              autoClose={2000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+              theme='light'
+            />
+          </WishlistProvider>
         </CartProvider>
       </AuthProvider>
     </BrowserRouter>
