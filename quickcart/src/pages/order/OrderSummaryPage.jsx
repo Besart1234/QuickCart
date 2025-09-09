@@ -132,7 +132,7 @@ export default OrderSummaryPage;
 export function getStatusStyle(status) {
     switch(status.toLowerCase()) {
         case 'pending': return 'warning';
-        case 'delivered': return 'success';
+        case 'shipped': return 'success';
         case 'cancelled': return 'danger';
         default: return 'secondary';
     }

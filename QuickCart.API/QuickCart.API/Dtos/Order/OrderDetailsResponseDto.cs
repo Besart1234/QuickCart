@@ -7,6 +7,8 @@ namespace QuickCart.API.Dtos.Order
     {
         public int Id { get; set; }
         public int UserId { get; set; }
+        public string UserFirstName { get; set; } = string.Empty;
+        public string UserLastName { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public decimal TotalPrice { get; set; }
         public string Status { get; set; } = "Pending";

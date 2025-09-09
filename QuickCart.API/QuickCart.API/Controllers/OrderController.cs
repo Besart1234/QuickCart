@@ -74,6 +74,7 @@ namespace QuickCart.API.Controllers
             var order = await _context.Order
                 .Include(o => o.OrderItems)
                 .ThenInclude(oi => oi.Product)
+                .Include(o => o.User)
                 .FirstOrDefaultAsync(o => o.Id == id);
 
             if (order == null) return NotFound();
@@ -82,6 +83,8 @@ namespace QuickCart.API.Controllers
             {
                 Id = order.Id,
                 UserId = order.UserId,
+                UserFirstName = order.User.FirstName,
+                UserLastName = order.User.LastName,
                 CreatedAt = order.CreatedAt,
                 TotalPrice = order.TotalPrice,
                 Status = order.Status,
@@ -186,21 +189,69 @@ namespace QuickCart.API.Controllers
             var order = await _context.Order.FindAsync(id);
             if (order == null) return NotFound();
 
-            if (order.Status != "Pending")
-                return BadRequest("Only pending orders can be modified");
-            
-            if(!String.IsNullOrEmpty(updatedOrder.Status))
-                order.Status = updatedOrder.Status;
+            var originalStatus = order.Status;
 
-            //Update shipping info
-            order.ShippingStreet = updatedOrder.ShippingStreet;
-            order.ShippingCity = updatedOrder.ShippingCity;
-            order.ShippingState = updatedOrder.ShippingState;
-            order.ShippingCountry = updatedOrder.ShippingCountry;
-            order.ShippingPostalCode = updatedOrder.ShippingPostalCode;
+            // RULE 1: Only allow status update if a new status is provided
+            // Only process status change if it's different from current
+            if (!string.IsNullOrEmpty(updatedOrder.Status) &&
+                order.Status != updatedOrder.Status)
+            {
+                switch(order.Status)
+                {
+                    case "Pending": 
+                        if(order.PaymentStatus == "requires_payment_method" &&
+                            updatedOrder.Status != "Cancelled")
+                        {
+                            // Pending + requires_payment_method → can only cancel
+                            return BadRequest("Orders awaiting payment can only be cancelled.");      
+                        }
+                        if(order.PaymentStatus == "Paid" &&
+                            updatedOrder.Status != "Confirmed")
+                        {
+                            // Pending + Paid → can only move to Confirmed
+                            return BadRequest("Paid pending orders can only be confirmed.");
+                        }
+                        break;
+
+                    case "Confirmed":
+                        // Confirmed → only Shipped or Delivered
+                        if(updatedOrder.Status != "Shipped")
+                        {
+                            return BadRequest("Confirmed orders can only move to Shipped.");
+                        }
+                        break;
+
+                    default:
+                        return BadRequest($"Cannot change status of an order in {order.Status} state");
+                }
+
+                order.Status = updatedOrder.Status;
+            }
+
+            // RULE 2: Only allow updating shipping info for non-cancelled orders
+            if(originalStatus != "Cancelled" && originalStatus != "Shipped")
+            {
+                order.ShippingStreet = updatedOrder.ShippingStreet;
+                order.ShippingCity = updatedOrder.ShippingCity;
+                order.ShippingState = updatedOrder.ShippingState;
+                order.ShippingCountry = updatedOrder.ShippingCountry;
+                order.ShippingPostalCode = updatedOrder.ShippingPostalCode;
+            }
+            else
+            {
+                // Only throw error if frontend actually tries to change the shipping info
+                bool shippingChanged =
+                    order.ShippingStreet != updatedOrder.ShippingStreet ||
+                    order.ShippingCity != updatedOrder.ShippingCity ||
+                    order.ShippingCountry != updatedOrder.ShippingCountry ||
+                    order.ShippingState != updatedOrder.ShippingState ||
+                    order.ShippingPostalCode != updatedOrder.ShippingPostalCode;
+
+                if(shippingChanged) 
+                    return BadRequest("Cannot update shipping info for cancelled or shipped orders.");
+            }
 
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
 
