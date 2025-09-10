@@ -65,26 +65,37 @@ namespace QuickCart.API.Controllers
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<UserResponseDto>> GetUser(int id)
+        public async Task<ActionResult<UserDetailsResponseDto>> GetUser(int id)
         {
             if(!IsSelfOrAdmin(id)) return Forbid();
 
             var user = await _userManager
-                .Users.FirstOrDefaultAsync(u => u.Id == id);
+                .Users.Include(u => u.Addresses)
+                .FirstOrDefaultAsync(u => u.Id == id);
 
             if(user == null) return NotFound();
 
             var roles = await _userManager.GetRolesAsync(user);
             var role = roles.FirstOrDefault() ?? string.Empty;
 
-            return new UserResponseDto
+            return new UserDetailsResponseDto
             {
                 Id = user.Id,
                 Role = role,
                 UserName = user.UserName ?? string.Empty,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
-                Email = user.Email ?? string.Empty
+                Email = user.Email ?? string.Empty,
+                Addresses = user.Addresses
+                    .Select(a => new UserAddressResponseDto 
+                    { 
+                        Id = a.Id,
+                        Street = a.Street,
+                        City = a.City,
+                        State = a.State,
+                        Country = a.Country,
+                        PostalCode = a.PostalCode
+                    }).ToList()
             };
         }
 

@@ -21,6 +21,8 @@ import { loadStripe } from "@stripe/stripe-js"
 import ProfilePage from "./pages/user/ProfilePage"
 import OrderList from "./pages/dashboard/order/OrderList"
 import OrderForm from "./pages/dashboard/order/OrderForm"
+import UserList from "./pages/dashboard/user/UserList"
+import UserForm from "./pages/dashboard/user/UserForm"
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -65,6 +67,9 @@ function App() {
 
 				<Route path="orders" element={<OrderList />} />
 				<Route path="orders/:id" element={<OrderForm />} />
+
+				<Route path="users" element={<UserList />} />
+				<Route path="users/:id" element={<UserForm />} />
 			</Route>
     	</Routes>
   	)
