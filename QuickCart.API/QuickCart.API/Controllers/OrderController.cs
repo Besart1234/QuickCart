@@ -191,6 +191,8 @@ namespace QuickCart.API.Controllers
 
             var originalStatus = order.Status;
 
+            bool modified = false;
+
             // RULE 1: Only allow status update if a new status is provided
             // Only process status change if it's different from current
             if (!string.IsNullOrEmpty(updatedOrder.Status) &&
@@ -226,16 +228,25 @@ namespace QuickCart.API.Controllers
                 }
 
                 order.Status = updatedOrder.Status;
+                modified = true;
             }
 
             // RULE 2: Only allow updating shipping info for non-cancelled orders
             if(originalStatus != "Cancelled" && originalStatus != "Shipped")
             {
-                order.ShippingStreet = updatedOrder.ShippingStreet;
-                order.ShippingCity = updatedOrder.ShippingCity;
-                order.ShippingState = updatedOrder.ShippingState;
-                order.ShippingCountry = updatedOrder.ShippingCountry;
-                order.ShippingPostalCode = updatedOrder.ShippingPostalCode;
+                if(order.ShippingStreet != updatedOrder.ShippingStreet ||
+                   order.ShippingCity != updatedOrder.ShippingCity ||
+                   order.ShippingState != updatedOrder.ShippingState ||
+                   order.ShippingCountry != updatedOrder.ShippingCountry ||
+                   order.ShippingPostalCode != updatedOrder.ShippingPostalCode)
+                {
+                    order.ShippingStreet = updatedOrder.ShippingStreet;
+                    order.ShippingCity = updatedOrder.ShippingCity;
+                    order.ShippingState = updatedOrder.ShippingState;
+                    order.ShippingCountry = updatedOrder.ShippingCountry;
+                    order.ShippingPostalCode = updatedOrder.ShippingPostalCode;
+                    modified = true;
+                }  
             }
             else
             {
@@ -250,9 +261,11 @@ namespace QuickCart.API.Controllers
                 if(shippingChanged) 
                     return BadRequest("Cannot update shipping info for cancelled or shipped orders.");
             }
+            
+            if(!modified) return NoContent(); //nothing changed
 
             await _context.SaveChangesAsync();
-            return NoContent();
+            return Ok(new { message = "Order updated successfully" });
         }
 
         [HttpDelete("{id}")]

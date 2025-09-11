@@ -22,7 +22,10 @@ function OrderForm() {
 
             if(res.ok) {
                 const data = await res.json();
-                setOrder(data);
+                setOrder({
+                    ...data,
+                    originalStatus: data.status // keep the real status from backend
+                });
             }
             else {
                 toast.error('Failed to load order');
@@ -117,12 +120,13 @@ function OrderForm() {
                         className="form-control"
                         value={order.status}
                         onChange={handleChange}
+                        disabled={order.originalStatus === 'Shipped' || order.originalStatus === 'Cancelled'} 
                     >
                         <option value="Pending">Pending</option>
                         <option value="Confirmed" disabled={order.paymentStatus !== 'Paid'}>
                             Confirmed
                         </option>
-                        <option value="Shipped" disabled={order.status != 'Confirmed'}>
+                        <option value="Shipped" disabled={order.originalStatus !== 'Confirmed'}>
                             Shipped
                         </option>
                         <option value="Cancelled" disabled={order.paymentStatus === 'Paid'}>
@@ -143,7 +147,7 @@ function OrderForm() {
                                 onChange={handleChange}
                                 className="form-control"
                                 required
-                                disabled={order.status === 'Cancelled' || order.status === 'Shipped'}
+                                disabled={order.originalStatus === 'Shipped' || order.originalStatus === 'Cancelled'}
                             />
                         </Col>
                         <Col>
@@ -155,7 +159,7 @@ function OrderForm() {
                                 onChange={handleChange}
                                 className="form-control"
                                 required
-                                disabled={order.status === 'Cancelled' || order.status === 'Shipped'}
+                                disabled={order.originalStatus === 'Shipped' || order.originalStatus === 'Cancelled'}
                             />
                         </Col>
                         <Col>
@@ -167,7 +171,7 @@ function OrderForm() {
                                 onChange={handleChange}
                                 className="form-control"
                                 required
-                                disabled={order.status === 'Cancelled' || order.status === 'Shipped'}
+                                disabled={order.originalStatus === 'Shipped' || order.originalStatus === 'Cancelled'}
                             />
                         </Col>
                         <Col>
@@ -179,7 +183,7 @@ function OrderForm() {
                                 onChange={handleChange}
                                 className="form-control"
                                 required
-                                disabled={order.status === 'Cancelled' || order.status === 'Shipped'}
+                                disabled={order.originalStatus === 'Shipped' || order.originalStatus === 'Cancelled'}
                             />
                         </Col>
                         <Col>
@@ -191,7 +195,7 @@ function OrderForm() {
                                 onChange={handleChange}
                                 className="form-control"
                                 required
-                                disabled={order.status === 'Cancelled' || order.status === 'Shipped'}
+                                disabled={order.originalStatus === 'Shipped' || order.originalStatus === 'Cancelled'}
                             />
                         </Col>
                     </Row>

@@ -14,10 +14,11 @@ function WishlistItemCard({ item, onRemoveFromWishlist, onAddToCart }) {
                         style={{
                             width: "100px",
                             height: "100px",
+                            margin: '5px',
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            backgroundColor: "#f8f9fa",
+                            border: "1px solid lightgrey",
                             borderRadius: "0.5rem",
                             flexShrink: 0 
                         }}
