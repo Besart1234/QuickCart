@@ -82,5 +82,34 @@ namespace QuickCart.API.Services
                     .SendAsync("NotificationRead", notificationId);
             }
         }
+
+        public async Task<bool> 
+            DeleteNotificationAsync(int notificationId, int userId)
+        {
+            var notification = await _context.Notification
+                .FirstOrDefaultAsync(n => n.Id == notificationId &&
+                n.UserId == userId);
+            if (notification == null) return false;
+
+            _context.Notification.Remove(notification);
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        public async Task DeleteAllNotificationsAsync(int userId)
+        {
+            var notifications = await _context.Notification
+                .Where(n => n.UserId == userId).ToListAsync();
+
+            _context.Notification.RemoveRange(notifications);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task<int> GetUnreadCountAsync(int userId)
+        {
+            return await _context.Notification
+                .CountAsync(n => n.UserId == userId && !n.IsRead);
+        }
     }
 }

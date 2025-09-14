@@ -17,11 +17,15 @@ namespace QuickCart.API.Controllers
     {
         private readonly QuickCartContext _context;
         private readonly CommentService _commentService;
+        private readonly NotificationService _notificationService;
 
-        public ProductController(QuickCartContext context, CommentService commentService)
+        public ProductController(QuickCartContext context, 
+            CommentService commentService,
+            NotificationService notificationService)
         {
             _context = context;
             _commentService = commentService;
+            _notificationService = notificationService;
         }
 
         [HttpGet]
@@ -426,6 +430,31 @@ namespace QuickCart.API.Controllers
                 Rating = comment.Rating,
                 CreatedAt = comment.CreatedAt
             };
+
+            var productName = await _context.Product
+                .Where(p => p.Id == productId)
+                .Select(p => p.Name)
+                .FirstOrDefaultAsync();
+
+            // SEND NOTIFICATION to all admins
+            var adminRoleId = await _context.Roles
+                .Where(r => r.Name == "Admin")
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync();
+
+            var adminIds = await _context.UserRoles
+                .Where(ur => ur.RoleId == adminRoleId)
+                .Select(ur => ur.UserId)
+                .ToListAsync();
+
+            foreach (var adminId in adminIds)
+            {
+                await _notificationService.CreateNotificationAsync(
+                    adminId,
+                    $"New comment by {userName ?? "Unknown"} " +
+                    $"on product {productName}: {newComment.Text}"
+                );
+            }
 
             return Ok(response);
         }

@@ -6,6 +6,7 @@ using QuickCart.API.Data;
 using QuickCart.API.Dtos.Order;
 using QuickCart.API.Dtos.OrderItem;
 using QuickCart.API.Models;
+using QuickCart.API.Services;
 using Stripe;
 using System.Security.Claims;
 
@@ -17,10 +18,13 @@ namespace QuickCart.API.Controllers
     public class OrderController : ControllerBase
     {
         private readonly QuickCartContext _context;
+        private readonly NotificationService _notificationService;
 
-        public OrderController(QuickCartContext context)
+        public OrderController(QuickCartContext context, 
+            NotificationService notificationService)
         {
             _context = context;
+            _notificationService = notificationService;
         }
 
         [HttpGet]
@@ -265,6 +269,14 @@ namespace QuickCart.API.Controllers
             if(!modified) return NoContent(); //nothing changed
 
             await _context.SaveChangesAsync();
+
+            await _notificationService.CreateNotificationAsync(
+                order.UserId,
+                $"The order's status you placed on {order.CreatedAt}" +
+                $" has changed to {order.Status}",
+                $"/orders/{order.Id}"
+            );
+
             return Ok(new { message = "Order updated successfully" });
         }
 
