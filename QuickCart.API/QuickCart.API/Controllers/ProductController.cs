@@ -452,7 +452,8 @@ namespace QuickCart.API.Controllers
                 await _notificationService.CreateNotificationAsync(
                     adminId,
                     $"New comment by {userName ?? "Unknown"} " +
-                    $"on product {productName}: {newComment.Text}"
+                    $"on product {productName}: {newComment.Text}",
+                    $"/product/{productId}"
                 );
             }
 

@@ -7,6 +7,7 @@ import AuthProvider from './contexts/AuthContext.jsx'
 import { ToastContainer } from "react-toastify"
 import CartProvider from './contexts/CartContext.jsx'
 import WishlistProvider from './contexts/WishlistContext.jsx'
+import NotificationProvider from './contexts/NotificationContext.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -14,19 +15,21 @@ createRoot(document.getElementById('root')).render(
       <AuthProvider>
         <CartProvider>
           <WishlistProvider>
-            <App />
-            <ToastContainer 
-              position='top-center'
-              autoClose={2000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-              theme='light'
-            />
+            <NotificationProvider>
+              <App />
+              <ToastContainer 
+                position='top-center'
+                autoClose={2000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme='light'
+              />
+            </NotificationProvider>
           </WishlistProvider>
         </CartProvider>
       </AuthProvider>

@@ -39,14 +39,6 @@ namespace QuickCart.API.Controllers
             return NoContent();
         }
 
-        [HttpGet("unread-count")]
-        public async Task<IActionResult> GetUnreadCount()
-        {
-            var userId = GetCurrentUserId();
-            var count = await _notificationService.GetUnreadCountAsync(userId);
-            return Ok(new { unreadCount = count });
-        }
-
         [HttpDelete("{id}")]
         public async Task<IActionResult> DeleteNotification(int id)
         {

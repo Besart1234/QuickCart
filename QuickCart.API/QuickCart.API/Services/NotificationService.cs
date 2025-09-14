@@ -105,11 +105,5 @@ namespace QuickCart.API.Services
             _context.Notification.RemoveRange(notifications);
             await _context.SaveChangesAsync();
         }
-
-        public async Task<int> GetUnreadCountAsync(int userId)
-        {
-            return await _context.Notification
-                .CountAsync(n => n.UserId == userId && !n.IsRead);
-        }
     }
 }

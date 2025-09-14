@@ -26,7 +26,6 @@ function DashboardCharts() {
             }
 
             const data = await res.json();
-            console.log(data);
             setOrdersOverTime(data);
         } catch (error) {
             console.error(error);
