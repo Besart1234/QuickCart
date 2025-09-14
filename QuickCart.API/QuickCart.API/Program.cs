@@ -10,6 +10,7 @@ using QuickCart.API.Services;
 using QuickCart.API.Settings;
 using System.Text;
 using Stripe;
+using QuickCart.API.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -133,6 +134,11 @@ builder.Services.AddSwaggerGen();
 // Add Stripe configuration
 StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
 
+// Add SignalR
+builder.Services.AddSignalR();
+
+// Register NotificationService
+builder.Services.AddScoped<NotificationService>();
 
 var app = builder.Build();
 
@@ -194,6 +200,8 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+
+app.MapHub<NotificationHub>("/hubs/notifications");
 
 using(var scope = app.Services.CreateScope())
 {

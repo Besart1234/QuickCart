@@ -20,6 +20,8 @@ namespace QuickCart.API.Data
 
         public DbSet<RefreshToken> RefreshToken { get; set; }
 
+        public DbSet<Notification> Notification { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             // IMPORTANT for Identity tables
@@ -64,6 +66,12 @@ namespace QuickCart.API.Data
                 .WithMany(o => o.OrderItems)
                 .HasForeignKey(oi => oi.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Notification>(entity =>
+            {
+                entity.HasIndex(n => 
+                    new { n.UserId, n.IsRead, n.CreatedAt });
+            });
         }
     }
 }
