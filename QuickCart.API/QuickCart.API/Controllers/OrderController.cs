@@ -34,6 +34,7 @@ namespace QuickCart.API.Controllers
         {
             var query = _context.Order
                 .Include(o => o.User)
+                .OrderByDescending(o => o.CreatedAt)
                 .AsQueryable();
 
             // --- pagination ---

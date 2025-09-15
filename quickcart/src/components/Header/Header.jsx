@@ -1,10 +1,11 @@
-import { Navbar, Nav, NavDropdown, Container } from "react-bootstrap";
+import { Navbar, Nav, NavDropdown, Container, Badge } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { useContext, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
 import './Header.css'
 import { CartContext } from "../../contexts/CartContext";
 import { FaShoppingCart } from "react-icons/fa";
+import NotificationsDropdown from "../notifications/NotificationsDropdown";
 
 function Header(){
     const { user, logout, loading } = useContext(AuthContext);
@@ -30,10 +31,23 @@ function Header(){
                         </>
                         ) : (
                             <>
+                                <NotificationsDropdown />
+
                                 {/* Cart link */}
-                                <Nav.Link as={Link} to='/cart' className="d-flex align-items-center cart-link">
-                                    <FaShoppingCart />
-                                    <span className="ms-1">Cart ({cartCount})</span>
+                                <Nav.Link as={Link} to='/cart'>
+                                    <div className="position-relative d-inline-block">
+                                        <FaShoppingCart size={20} className="text-dark" />
+                                        {cartCount > 0 && (
+                                            <Badge
+                                                bg="primary"
+                                                pill
+                                                className="position-absolute top-0 start-100 translate-middle"
+                                                style={{ fontSize: '0.6rem' }}
+                                            >
+                                                {cartCount}
+                                            </Badge>
+                                        )}
+                                    </div>
                                 </Nav.Link>
 
                                 {/* User dropdown */}

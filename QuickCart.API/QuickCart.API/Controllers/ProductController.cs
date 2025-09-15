@@ -453,7 +453,7 @@ namespace QuickCart.API.Controllers
                     adminId,
                     $"New comment by {userName ?? "Unknown"} " +
                     $"on product {productName}: {newComment.Text}",
-                    $"/product/{productId}"
+                    $"/products/{productId}"
                 );
             }
 

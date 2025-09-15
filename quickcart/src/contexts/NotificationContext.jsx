@@ -53,12 +53,11 @@ function NotificationProvider({ children }) {
             .build();
 
         newConnection.on('ReceiveNotification', (notification) => {
-            console.log('New notification:', notification);
+            toast.success(getNotificationPreview(notification))
             setNotifications(prev => [notification, ...prev]);
         });
 
         newConnection.on('NotificationRead', (notificationId) => {
-            console.log('Notification marked as read:', notificationId);
             setNotifications(prev => (
                 prev.map(n => n.id === notificationId ? { ...n, isRead: true } : n)
             ));
@@ -145,3 +144,11 @@ function NotificationProvider({ children }) {
 }
 
 export default NotificationProvider;
+
+export const getNotificationPreview =function(notification) {
+    if(notification.message.startsWith('New comment by')) {
+        const [prefix] = notification.message.split(':');
+        return prefix;
+    }
+    return notification.message;
+}

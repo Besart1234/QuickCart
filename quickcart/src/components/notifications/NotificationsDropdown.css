@@ -1,0 +1,24 @@
+#dropdown-notifications {
+    background-color: transparent !important;
+    border-color: #f8f9fa;
+}
+
+.notification-dropdown .dropdown-item {
+    white-space: normal !important;
+    word-break: break-word;
+    max-width: 320px;
+    min-width: 260px;
+    font-size: 0.875rem; 
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e9ecef; /* light gray divider */
+}
+
+.notification-dropdown .dropdown-item:last-child {
+  border-bottom: none; /* don’t double-line the last item */
+}
+
+.notification-dropdown {
+    max-height: 250px;
+    overflow-y: auto;
+}
+

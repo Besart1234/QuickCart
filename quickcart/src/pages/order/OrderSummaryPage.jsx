@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from "react";
 import { AuthContext } from "../../contexts/AuthContext";
-import { Link, Navigate, useLocation, useParams } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useParams } from "react-router-dom";
 import { authFetch } from "../../utils/AuthFetch";
 import { Badge, Card, Col, Container, Row } from "react-bootstrap";
 
@@ -11,6 +11,7 @@ function OrderSummaryPage() {
     const { orderId } = useParams();
     const location = useLocation();
     const [order, setOrder] = useState(null);
+    const navigate = useNavigate();
 
     const fetchOrder = async () => {
         try {
@@ -18,6 +19,9 @@ function OrderSummaryPage() {
             if(res.ok) {
                 const data = await res.json();
                 setOrder(data);
+            }
+            else if(res.status === 403) {
+                navigate('/', { replace: true });
             }
         } catch (error) {
             console.error(error);
@@ -33,11 +37,9 @@ function OrderSummaryPage() {
 
     if(!order) return <p>Loading order...</p>;
 
-    if(!location.state?.fromCheckout && !location.state?.fromProfile) return <Navigate to='/' replace />
-
     return (
         <Container className="py-4">
-            {location.state.fromCheckout ? (
+            {location.state?.fromCheckout ? (
                 <>
                     <h1 className="h3 mb-4">Thank You!</h1>
                     <p>

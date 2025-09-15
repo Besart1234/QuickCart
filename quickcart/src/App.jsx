@@ -23,6 +23,7 @@ import OrderList from "./pages/dashboard/order/OrderList"
 import OrderForm from "./pages/dashboard/order/OrderForm"
 import UserList from "./pages/dashboard/user/UserList"
 import UserForm from "./pages/dashboard/user/UserForm"
+import Notifications from "./pages/notification/Notifications"
 
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
@@ -37,6 +38,7 @@ function App() {
 				<Route path="signup" element={<Signup />} />
 				<Route path="cart" element={<Cart />} />
 				<Route path="wishlist" element={<Wishlist />} />
+				<Route path="notifications" element={<Notifications />} />
 
 				<Route path="products/:id" element={<ProductDetails />}/>
 

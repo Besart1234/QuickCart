@@ -54,6 +54,7 @@ namespace QuickCart.API.Services
         {
             return await _context.Notification
                 .Where(n => n.UserId == userId)
+                .OrderByDescending(n => n.CreatedAt)
                 .Select(n => new NotificationResponseDto
                 {
                     Id = n.Id,
