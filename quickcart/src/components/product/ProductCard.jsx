@@ -7,6 +7,7 @@ import { AuthContext } from "../../contexts/AuthContext";
 import { CartContext } from "../../contexts/CartContext";
 import { toast } from "react-toastify";
 import { WishlistContext } from "../../contexts/WishlistContext";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 const IMG_URL = 'https://localhost:7000';
 const API_URL = 'https://localhost:7000/api';
@@ -30,10 +31,11 @@ function ProductCard({ product }) {
 
     return (
         <Card className="product-card shadow-sm h-100">
-            <Card.Img 
+            <LazyLoadImage 
                 variant="top"
                 src={`${IMG_URL}${product.mainImageUrl}`}
                 alt={product.name}
+                effect="blur"
                 className="product-image"
             />
             <Card.Body className="d-flex flex-column justify-content-between">

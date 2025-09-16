@@ -4,6 +4,7 @@ import { authFetch } from "../../../utils/AuthFetch";
 import ConfirmationModal from "../../../components/ConfirmationModal";
 import { toast } from "react-toastify";
 import { Button, Form } from "react-bootstrap";
+import { LazyLoadImage } from "react-lazy-load-image-component";
 
 const API_URL = 'https://localhost:7000/api';
 const IMG_URL = "https://localhost:7000";
@@ -260,7 +261,7 @@ function ProductForm() {
                         <div className="d-flex flex-wrap align-items-start" style={{ backgroundColor: 'white', maxWidth: 'max-content' }}>
                             {formData.existingImages.map(img => (
                                 <div key={img.id} className="m-2 text-center">
-                                    <img 
+                                    <LazyLoadImage 
                                         src={`${IMG_URL}${img.url}`}
                                         alt={formData.name}
                                         style={{

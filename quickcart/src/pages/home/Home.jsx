@@ -6,6 +6,7 @@ import { useSearchParams } from "react-router-dom";
 import ProductSearch from "../../components/product/ProductSearch";
 import CategoryFilter from "../../components/category/CategoryFilter";
 import PriceFilter from "../../components/product/PriceFilter";
+import PriceSort from "../../components/product/PriceSort";
 
 const API_URL = 'https://localhost:7000/api';
 
@@ -20,6 +21,7 @@ function Home() {
     const categoryId = searchParams.get('categoryId') || '';
     const priceParam = searchParams.get('price') || '';
     const pageParam = parseInt(searchParams.get('page')) || 1;
+    const sortParam = searchParams.get('sort') || '';
 
     //Fetch categories
     useEffect(() => {
@@ -29,13 +31,14 @@ function Home() {
             .catch(e => console.error(e));
     }, []);
 
-    const fetchProducts = async (query = '', categoryId = '', price = '', page = 1) => {
+    const fetchProducts = async (query = '', categoryId = '', price = '', page = 1, sort = '') => {
         setLoading(true);
 
         const url = new URL(`${API_URL}/product`);
         if(query) url.searchParams.append('search', query);
         if(categoryId) url.searchParams.append('categoryId', categoryId);
         if(price) url.searchParams.append('price', price);
+        if(sort) url.searchParams.append('sort', sort);
         url.searchParams.append('page', page);
         url.searchParams.append('pageSize', 12);
 
@@ -71,27 +74,9 @@ function Home() {
     };
 
     useEffect(() => {
-        fetchProducts(searchQuery, categoryId, priceParam, pageParam);
+        fetchProducts(searchQuery, categoryId, priceParam, pageParam, sortParam);
         window.scrollTo(0, 0); //scroll to top on new search
-    }, [searchQuery, categoryId, priceParam, pageParam]);
-
-    // useEffect(() => {
-    //     // once products are loaded and we know totalPages, validate page
-    //     if(totalPages > 0 && pageParam > totalPages) {
-    //         setSearchParams(prev => {
-    //             const params = new URLSearchParams(prev);
-    //             params.set('page', totalPages);
-    //             return params;
-    //         }, { replace: true }); // replace so user’s history isn’t spammed
-    //     }
-    //     if(pageParam < 1) {
-    //         setSearchParams(prev => {
-    //             const params = new URLSearchParams(prev);
-    //             params.set('page', 1);
-    //             return params;
-    //         }, { replace: true });
-    //     }
-    // }, [totalPages, pageParam]);
+    }, [searchQuery, categoryId, priceParam, pageParam, sortParam]);
 
     const handleNextPage = () => {
         if(pageParam < totalPages) {
@@ -133,6 +118,15 @@ function Home() {
         setSearchParams(params);
     };
 
+    const handleSortChange = (sort) => {
+        const params = new URLSearchParams(searchParams);
+
+        if(sort) params.set('sort', sort);
+        else params.delete('sort');
+
+        setSearchParams(params);
+    };
+
     return (
         <>
             <h2>{searchQuery ? `Search results for '${searchQuery}'` : ''}</h2>
@@ -151,6 +145,11 @@ function Home() {
                     <PriceFilter 
                         selectedPrice={priceParam}
                         onChange={handlePriceFilterChange}
+                    />
+
+                    <PriceSort 
+                        selectedSort={sortParam}
+                        onChange={handleSortChange}
                     />
                 </Col>
             </Row>

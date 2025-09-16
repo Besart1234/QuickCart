@@ -35,7 +35,8 @@ namespace QuickCart.API.Controllers
             [FromQuery] int? categoryId = null,
             [FromQuery] string? price = null,
             [FromQuery] int page = 1,
-            [FromQuery] int pageSize = 10)
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? sort = null)
         {
             var query = _context.Product
                 .Include(p => p.Category)
@@ -80,8 +81,23 @@ namespace QuickCart.API.Controllers
                 }
             }
 
+            // --- sorting ---
+            if (!string.IsNullOrEmpty(sort))
+            {
+                switch(sort)
+                {
+                    case "priceAsc":
+                        query = query.OrderBy(p => p.Price);
+                        break;
+                    case "priceDesc":
+                        query = query.OrderByDescending(p => p.Price);
+                        break;
+                    default: break;
+                }
+            }
+
             // --- pagination ---
-            var totalProducts = await _context.Product.CountAsync();
+            var totalProducts = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalProducts / pageSize);
 
             if (totalPages == 0) totalPages = 1; // safety: at least 1 page
