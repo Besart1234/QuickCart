@@ -3,7 +3,7 @@ import { Col, Row } from "react-bootstrap";
 import ProductCard from "../../components/product/ProductCard";
 import { toast } from "react-toastify";
 import { useSearchParams } from "react-router-dom";
-import ProductSearch from "../../components/product/ProductSearch";
+import SearchInput from "../../components/SearchInput";
 import CategoryFilter from "../../components/category/CategoryFilter";
 import PriceFilter from "../../components/product/PriceFilter";
 import PriceSort from "../../components/product/PriceSort";
@@ -132,7 +132,10 @@ function Home() {
             <h2>{searchQuery ? `Search results for '${searchQuery}'` : ''}</h2>
             <Row className="align-items-center mb-3 flex-wrap">
                 <Col xs={12} md={6} lg={5} className="mb-2 mb-md-0">
-                    <ProductSearch />
+                    <SearchInput 
+                        paramKey="search"
+                        placeholder="Search products..."
+                    />
                 </Col>
 
                 <Col xs='auto' className="ms-auto d-flex justify-content-end gap-2">

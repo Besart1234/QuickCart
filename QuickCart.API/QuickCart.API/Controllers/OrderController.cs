@@ -30,15 +30,53 @@ namespace QuickCart.API.Controllers
         [HttpGet]
         [Authorize(Roles = "Admin")]
         public async Task<ActionResult<IEnumerable<OrderResponseDto>>> 
-            GetOrders([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+            GetOrders([FromQuery] int page = 1, 
+            [FromQuery] int pageSize = 10,
+            [FromQuery] string? status = null,
+            [FromQuery] string? user = null, //search by user, hence the name 'user'
+            [FromQuery] string? sort = "dateDesc")
         {
             var query = _context.Order
                 .Include(o => o.User)
-                .OrderByDescending(o => o.CreatedAt)
                 .AsQueryable();
 
+            // --- filter by status ---
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(o => o.Status == status);
+            }
+
+            // --- search by user ---
+            if (!string.IsNullOrEmpty(user))
+            {
+                user = user.ToLower();
+                query = query.Where(o => 
+                    o.User.FirstName.ToLower().Contains(user) ||
+                    o.User.LastName.ToLower().Contains(user));
+            }
+
+            // --- sorting ---
+            switch (sort)
+            {
+                case "dateAsc":
+                    query = query.OrderBy(o => o.CreatedAt);
+                    break;
+                case "dateDesc":
+                    query = query.OrderByDescending(o => o.CreatedAt);
+                    break;
+                case "totalAsc":
+                    query = query.OrderBy(o => o.TotalPrice);
+                    break;
+                case "totalDesc":
+                    query = query.OrderByDescending(o => o.TotalPrice);
+                    break;
+                default:
+                    query = query.OrderByDescending(o => o.CreatedAt);
+                    break;
+            }
+
             // --- pagination ---
-            var totalOrders = await _context.Order.CountAsync();
+            var totalOrders = await query.CountAsync();
             var totalPages = (int)Math.Ceiling((double)totalOrders / pageSize);
 
             if (totalPages == 0) totalPages = 1; // safety: at least 1 page
